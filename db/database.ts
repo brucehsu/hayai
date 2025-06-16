@@ -1,0 +1,142 @@
+import { Database } from "@db/sqlite";
+
+export interface User {
+  id: number;
+  email: string;
+  name: string;
+  avatar_url?: string;
+  google_id: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Thread {
+  id: number;
+  user_id: number;
+  title: string;
+  messages: string; // JSON string
+  llm_provider: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Message {
+  id: string;
+  role: "user" | "assistant";
+  content: string;
+  timestamp: string;
+}
+
+let db: Database;
+
+export function initDB() {
+  const dbPath = Deno.env.get("DATABASE_PATH") || "./database.db";
+  
+  db = new Database(dbPath);
+  
+  // Create users table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS users (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      email TEXT UNIQUE NOT NULL,
+      name TEXT NOT NULL,
+      avatar_url TEXT,
+      google_id TEXT UNIQUE NOT NULL,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    )
+  `);
+  
+  // Create threads table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS threads (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_id INTEGER NOT NULL,
+      title TEXT NOT NULL,
+      messages TEXT DEFAULT '[]',
+      llm_provider TEXT DEFAULT 'openai',
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      FOREIGN KEY (user_id) REFERENCES users (id)
+    )
+  `);
+  
+  // Create trigger to update updated_at timestamp
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS update_users_timestamp 
+    AFTER UPDATE ON users
+    BEGIN
+      UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    END
+  `);
+  
+  db.exec(`
+    CREATE TRIGGER IF NOT EXISTS update_threads_timestamp 
+    AFTER UPDATE ON threads
+    BEGIN
+      UPDATE threads SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    END
+  `);
+}
+
+export function getDB(): Database {
+  if (!db) {
+    initDB();
+  }
+  return db;
+}
+
+// User operations
+export function createUser(user: Omit<User, "id" | "created_at" | "updated_at">): User {
+  const stmt = getDB().prepare(
+    "INSERT INTO users (email, name, avatar_url, google_id) VALUES (?, ?, ?, ?) RETURNING *"
+  );
+  const result = stmt.get(user.email, user.name, user.avatar_url, user.google_id);
+  return result as User;
+}
+
+export function getUserByGoogleId(googleId: string): User | null {
+  const stmt = getDB().prepare("SELECT * FROM users WHERE google_id = ?");
+  const result = stmt.get(googleId);
+  return result as User || null;
+}
+
+export function getUserById(id: number): User | null {
+  const stmt = getDB().prepare("SELECT * FROM users WHERE id = ?");
+  const result = stmt.get(id);
+  return result as User || null;
+}
+
+// Thread operations
+export function createThread(thread: Omit<Thread, "id" | "created_at" | "updated_at">): Thread {
+  const stmt = getDB().prepare(
+    "INSERT INTO threads (user_id, title, messages, llm_provider) VALUES (?, ?, ?, ?) RETURNING *"
+  );
+  const result = stmt.get(thread.user_id, thread.title, thread.messages, thread.llm_provider);
+  return result as Thread;
+}
+
+export function getThreadsByUserId(userId: number): Thread[] {
+  const stmt = getDB().prepare("SELECT * FROM threads WHERE user_id = ? ORDER BY updated_at DESC");
+  const result = stmt.all(userId);
+  return result as Thread[];
+}
+
+export function getThreadById(id: number): Thread | null {
+  const stmt = getDB().prepare("SELECT * FROM threads WHERE id = ?");
+  const result = stmt.get(id);
+  return result as Thread || null;
+}
+
+export function updateThread(id: number, updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>): void {
+  const setClause = Object.keys(updates).map(key => `${key} = ?`).join(", ");
+  const values = Object.values(updates);
+  
+  const stmt = getDB().prepare(`UPDATE threads SET ${setClause} WHERE id = ?`);
+  stmt.run(...values, id);
+}
+
+export function deleteThread(id: number): void {
+  const stmt = getDB().prepare("DELETE FROM threads WHERE id = ?");
+  stmt.run(id);
+} 
