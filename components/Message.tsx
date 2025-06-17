@@ -26,7 +26,7 @@ export default function Message({ message }: MessageProps): JSX.Element {
           </p>
         )}
         <p class="text-sm whitespace-pre-wrap">{message.content}</p>
-        <p class="text-xs mt-1 opacity-70">
+        <p class="text-xs mt-1 opacity-70 text-right">
           {new Date(message.timestamp).toLocaleTimeString()}
         </p>
       </div>
