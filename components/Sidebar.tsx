@@ -17,11 +17,17 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
             <p class="text-xs">{user.email}</p>
           </div>
         ) : (
-          <div class="mt-2 text-sm text-gray-300">
-            <p>{user ? user.name : "Anonymous User"}</p>
-            <a href="/auth/login" class="text-blue-400 hover:text-blue-300 text-xs">
-              {user ? "Sign in to save your chats" : "Sign in to save chats"}
-            </a>
+          <div class="mt-2">
+            <div class="mt-2 p-3 bg-gray-800 rounded-md border border-gray-600">
+            <p class="text-sm text-gray-300 font-bold">You're now in Guest mode</p>
+            <p class="text-sm text-gray-300">To save your threads, create an account!</p>
+              <a 
+                href="/auth/login" 
+                class="block bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm text-center transition-colors mt-4"
+              >
+                Sign In with Google
+              </a>
+            </div>
           </div>
         )}
       </div>
@@ -59,7 +65,7 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
                 ))
               )}
             </>
-          ) : user ? (
+          ) : (
             <>
               <h2 class="text-sm font-medium text-gray-400 mb-2">Recent Chats</h2>
               {threads.length === 0 ? (
@@ -78,45 +84,19 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
                   </a>
                 ))
               )}
-              <div class="mt-4 p-3 bg-gray-800 rounded-md text-center">
-                <p class="text-gray-400 text-xs mb-2">Sign in to save your chats permanently</p>
-                <a 
-                  href="/auth/login" 
-                  class="inline-block bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-xs transition-colors"
-                >
-                  Sign In with Google
-                </a>
-              </div>
             </>
-          ) : (
-            <div class="text-center text-gray-400 text-sm">
-              <p class="mb-2">Sign in to save and access your chat history</p>
-              <a 
-                href="/auth/login" 
-                class="inline-block bg-gray-700 hover:bg-gray-600 px-3 py-2 rounded text-xs transition-colors"
-              >
-                Sign In
-              </a>
-            </div>
           )}
         </div>
       </div>
 
       {/* User Menu */}
       <div class="p-4 border-t border-gray-700">
-        {user && user.isLoggedIn ? (
+        {user && user.isLoggedIn && (
           <a 
             href="/auth/logout" 
             class="text-sm text-gray-400 hover:text-white transition-colors"
           >
             Sign Out
-          </a>
-        ) : (
-          <a 
-            href="/auth/login" 
-            class="text-sm text-blue-400 hover:text-blue-300 transition-colors"
-          >
-            Sign In with Google
           </a>
         )}
       </div>
