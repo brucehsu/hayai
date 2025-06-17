@@ -5,7 +5,7 @@ export const handler: Handlers = {
   GET() {
     const headers = new Headers();
     clearSessionCookie(headers);
-    headers.set("location", "/auth/login");
+    headers.set("location", "/");
     
     return new Response(null, { status: 302, headers });
   },
