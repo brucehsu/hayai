@@ -1,11 +1,13 @@
 import { JSX } from "preact";
+import ThreadList from "./ThreadList.tsx";
 
 interface SidebarProps {
   user: { id: number; name: string; email: string; isLoggedIn: boolean } | null;
   threads: any[];
+  currentThread: any;
 }
 
-export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
+export default function Sidebar({ user, threads, currentThread }: SidebarProps): JSX.Element {
   return (
     <div class="w-64 bg-gray-900 text-white flex flex-col">
       {/* Header */}
@@ -50,51 +52,19 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
       <div class="flex-1 overflow-y-auto">
         <div class="p-2">
           {user && user.isLoggedIn ? (
-            <>
-              <h2 class="text-sm font-medium text-gray-400 mb-2">Your Chats</h2>
-              {threads.length === 0 ? (
-                <p class="text-gray-500 text-sm">No saved chats yet</p>
-              ) : (
-                threads.map((thread: any) => (
-                  <a
-                    key={thread.id}
-                    href={`/chat/${thread.uuid}`}
-                    class="block p-3 mb-2 rounded-md hover:bg-gray-800 transition-colors"
-                  >
-                    <div class="font-medium text-sm truncate">
-                      {thread.title}
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">
-                      {new Date(thread.updated_at).toLocaleDateString()}
-                    </div>
-                  </a>
-                ))
-              )}
-            </>
+            <ThreadList 
+              threads={threads}
+              title="Your Chats"
+              emptyMessage="No saved chats yet"
+              currentThreadId={currentThread?.uuid}
+            />
           ) : (
-            <>
-              <h2 class="text-sm font-medium text-gray-400 mb-2">
-                Recent Chats
-              </h2>
-              {threads.length === 0 ? (
-                <p class="text-gray-500 text-sm">No chats yet</p>
-              ) : (
-                threads.map((thread: any) => (
-                  <a
-                    key={thread.id}
-                    href={`/chat/${thread.uuid}`}
-                    class="block p-3 mb-2 rounded-md hover:bg-gray-800 transition-colors"
-                  >
-                    <div class="font-medium text-sm truncate">
-                      {thread.title}
-                    </div>
-                    <div class="text-xs text-gray-400 mt-1">
-                      {new Date(thread.updated_at).toLocaleDateString()}
-                    </div>
-                  </a>
-                ))
-              )}
-            </>
+            <ThreadList 
+              threads={threads}
+              title="Recent Chats"
+              emptyMessage="No chats yet"
+              currentThreadId={currentThread?.uuid}
+            />
           )}
         </div>
       </div>
