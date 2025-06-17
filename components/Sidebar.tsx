@@ -19,10 +19,14 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
         ) : (
           <div class="mt-2">
             <div class="mt-2 p-3 bg-gray-800 rounded-md border border-gray-600">
-            <p class="text-sm text-gray-300 font-bold">You're now in Guest mode</p>
-            <p class="text-sm text-gray-300">To save your threads, create an account!</p>
-              <a 
-                href="/auth/login" 
+              <p class="text-sm text-gray-300 font-bold">
+                You're now in Guest mode
+              </p>
+              <p class="text-sm text-gray-300">
+                To save your threads, create an account!
+              </p>
+              <a
+                href="/auth/login"
                 class="block bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm text-center transition-colors mt-4"
               >
                 Sign In with Google
@@ -34,8 +38,8 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
 
       {/* New Chat Button */}
       <div class="p-4">
-        <a 
-          href="/chat/new" 
+        <a
+          href="/chat/new"
           class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center"
         >
           + New Chat
@@ -57,7 +61,9 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
                     href={`/chat/${thread.uuid}`}
                     class="block p-3 mb-2 rounded-md hover:bg-gray-800 transition-colors"
                   >
-                    <div class="font-medium text-sm truncate">{thread.title}</div>
+                    <div class="font-medium text-sm truncate">
+                      {thread.title}
+                    </div>
                     <div class="text-xs text-gray-400 mt-1">
                       {new Date(thread.updated_at).toLocaleDateString()}
                     </div>
@@ -67,7 +73,9 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
             </>
           ) : (
             <>
-              <h2 class="text-sm font-medium text-gray-400 mb-2">Recent Chats</h2>
+              <h2 class="text-sm font-medium text-gray-400 mb-2">
+                Recent Chats
+              </h2>
               {threads.length === 0 ? (
                 <p class="text-gray-500 text-sm">No chats yet</p>
               ) : (
@@ -77,7 +85,9 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
                     href={`/chat/${thread.uuid}`}
                     class="block p-3 mb-2 rounded-md hover:bg-gray-800 transition-colors"
                   >
-                    <div class="font-medium text-sm truncate">{thread.title}</div>
+                    <div class="font-medium text-sm truncate">
+                      {thread.title}
+                    </div>
                     <div class="text-xs text-gray-400 mt-1">
                       {new Date(thread.updated_at).toLocaleDateString()}
                     </div>
@@ -90,16 +100,17 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
       </div>
 
       {/* User Menu */}
-      <div class="p-4 border-t border-gray-700">
-        {user && user.isLoggedIn && (
-          <a 
-            href="/auth/logout" 
-            class="text-sm text-gray-400 hover:text-white transition-colors"
+
+      {user && user.isLoggedIn && (
+        <div class="p-4 border-t border-gray-700">
+          <a
+            href="/auth/logout"
+            class="block bg-red-600 hover:bg-red-700 px-3 py-2 rounded text-sm text-center transition-colors mt-4"
           >
             Sign Out
           </a>
-        )}
-      </div>
+        </div>
+      )}
     </div>
   );
-} 
+}
