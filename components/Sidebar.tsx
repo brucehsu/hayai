@@ -2,7 +2,7 @@ import { JSX } from "preact";
 import ThreadList from "./ThreadList.tsx";
 
 interface SidebarProps {
-  user: { id: number; name: string; email: string; isLoggedIn: boolean } | null;
+  user: { id: number; name: string; email: string; isLoggedIn: boolean; messagesRemaining?: number; messageLimit?: number; isRateLimited?: boolean } | null;
   threads: any[];
   currentThread: any;
 }
@@ -27,6 +27,24 @@ export default function Sidebar({ user, threads, currentThread }: SidebarProps):
               <p class="text-sm text-gray-300">
                 To save your threads, create an account!
               </p>
+              
+              {/* Rate Limiting Info for Guests */}
+              {user && user.messagesRemaining !== undefined && (
+                <div class="mt-3 p-2 bg-gray-700 rounded border border-gray-500">
+                  <p class="text-xs text-gray-300 font-medium">
+                    Messages remaining: 
+                    <span class={`ml-1 font-bold ${user.messagesRemaining <= 2 ? 'text-red-400' : user.messagesRemaining <= 5 ? 'text-yellow-400' : 'text-green-400'}`}>
+                      {user.messagesRemaining}/{user.messageLimit}
+                    </span>
+                  </p>
+                  {user.isRateLimited && (
+                    <p class="text-xs text-red-400 mt-1 font-medium">
+                      Limit reached! Sign in to continue.
+                    </p>
+                  )}
+                </div>
+              )}
+              
               <a
                 href="/auth/login"
                 class="block bg-blue-600 hover:bg-blue-700 px-3 py-2 rounded text-sm text-center transition-colors mt-4"
