@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { getSessionFromRequest, getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
+import { getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
 import { createThread, getThreadsByUserId } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
 import { aiManager } from "../../lib/ai/ai-manager.ts";
@@ -14,14 +14,18 @@ interface PageData {
 
 export const handler: Handlers<PageData> = {
   async GET(req, ctx) {
-    let session = await getSessionFromRequest(req);
+    let extendedSession = await getExtendedSessionFromRequest(req);
     
     // If no session, create a guest user
-    if (!session) {
-      const guestResult = await getOrCreateGuestUser(req);
-      const sessionToken = await createSession(guestResult.sessionData);
+    if (!extendedSession) {
+      const { user: guestUser, sessionData } = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession(sessionData);
       
-      session = guestResult.sessionData;
+      extendedSession = {
+        ...sessionData,
+        isGuest: true,
+        isLoggedIn: false
+      };
       
       // Set session cookie
       const headers = new Headers();
@@ -29,8 +33,13 @@ export const handler: Handlers<PageData> = {
       
       // Return response with session cookie
       const response = await ctx.render({
-        user: session,
-        threads: getThreadsByUserId(guestResult.sessionData.userId),
+        user: {
+          id: extendedSession.userId,
+          name: extendedSession.name,
+          email: extendedSession.email,
+          isLoggedIn: extendedSession.isLoggedIn
+        },
+        threads: getThreadsByUserId(sessionData.userId),
         currentThread: null
       });
       
@@ -43,17 +52,22 @@ export const handler: Handlers<PageData> = {
     }
     
     // Load threads for existing session
-    const threads = getThreadsByUserId(session.userId);
+    const threads = getThreadsByUserId(extendedSession.userId);
     
     return ctx.render({
-      user: session,
+      user: {
+        id: extendedSession.userId,
+        name: extendedSession.name,
+        email: extendedSession.email,
+        isLoggedIn: extendedSession.isLoggedIn
+      },
       threads,
       currentThread: null
     });
   },
   
   async POST(req, ctx) {
-    let session = await getSessionFromRequest(req);
+    let extendedSession = await getExtendedSessionFromRequest(req);
     const formData = await req.formData();
     const message = formData.get("message") as string;
     const provider = formData.get("provider") as string || "openai";
@@ -63,11 +77,15 @@ export const handler: Handlers<PageData> = {
     }
     
     // If no session, create a guest user
-    if (!session) {
-      const guestResult = await getOrCreateGuestUser(req);
-      const sessionToken = await createSession(guestResult.sessionData);
+    if (!extendedSession) {
+      const { user: guestUser, sessionData } = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession(sessionData);
       
-      session = guestResult.sessionData;
+      extendedSession = {
+        ...sessionData,
+        isGuest: true,
+        isLoggedIn: false
+      };
     }
     
     // For all users (now including guests), save to database
@@ -107,7 +125,7 @@ export const handler: Handlers<PageData> = {
     const title = message.trim().slice(0, 50) + (message.length > 50 ? "..." : "");
     
     const newThread = createThread({
-      user_id: session.userId,
+      user_id: extendedSession.userId,
       title: title,
       messages: JSON.stringify(messages),
       llm_provider: provider
