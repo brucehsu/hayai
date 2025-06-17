@@ -122,7 +122,27 @@ export const handler: Handlers<PageData> = {
     };
 
     const messages = [userMessage, aiMessage];
-    const title = message.trim().slice(0, 50) + (message.length > 50 ? "..." : "");
+    
+    // Generate title using Gemini
+    let title = message.trim().slice(0, 50) + (message.length > 50 ? "..." : ""); // fallback
+    try {
+      if (aiManager.isProviderAvailable("gemini")) {
+        const titlePrompt = `Given this message ${message} and the language it's written in, give me a 40-character overview as title without any formatting.`;
+        const titleResponse = await aiManager.chat(
+          [{ role: "user", content: titlePrompt }] as AIMessage[],
+          "gemini",
+          {
+            model: "gemini-2.5-flash-lite-preview-06-17",
+            temperature: 0.3,
+            maxTokens: 50
+          }
+        );
+        title = titleResponse.content.trim();
+      }
+    } catch (error) {
+      console.error("Title generation error:", error);
+      // Keep fallback title
+    }
     
     const newThread = createThread({
       user_id: extendedSession.userId,
