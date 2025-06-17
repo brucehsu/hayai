@@ -10,7 +10,7 @@ export class OpenAIClient implements AIClient {
     this.config = {
       model: "gpt-4o-2024-08-06",
       temperature: 0.7,
-      maxTokens: 1000,
+      maxTokens: 16384,
       baseUrl: "https://api.openai.com/v1",
       ...config,
     };

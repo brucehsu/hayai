@@ -2,15 +2,15 @@ import { AIClient, AIMessage, AIResponse, AIClientConfig, ChatOptions } from "./
 
 export class GeminiClient implements AIClient {
   readonly provider = "gemini";
-  readonly defaultModel = "gemini-2.5-flash-preview-05-20";
+  readonly defaultModel = "gemini-2.5-flash";
   
   private config: AIClientConfig;
   
   constructor(config: AIClientConfig) {
     this.config = {
-      model: "gemini-2.5-flash-preview-05-20",
+      model: this.defaultModel,
       temperature: 0.7,
-      maxTokens: 1000,
+      maxTokens: 100000,
       baseUrl: "https://generativelanguage.googleapis.com/v1beta",
       ...config,
     };
@@ -60,8 +60,11 @@ export class GeminiClient implements AIClient {
       }
       
       const data = await response.json();
+
+      console.log(model);
       
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+        console.log(JSON.stringify(data, null, 2));
         throw new GeminiAIError("Invalid response format from Gemini", this.provider);
       }
       
