@@ -12,6 +12,7 @@ export interface User {
 
 export interface Thread {
   id: number;
+  uuid: string;
   user_id: number;
   title: string;
   messages: string; // JSON string
@@ -51,6 +52,7 @@ export function initDB() {
   db.exec(`
     CREATE TABLE IF NOT EXISTS threads (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      uuid TEXT UNIQUE NOT NULL,
       user_id INTEGER NOT NULL,
       title TEXT NOT NULL,
       messages TEXT DEFAULT '[]',
@@ -60,6 +62,20 @@ export function initDB() {
       FOREIGN KEY (user_id) REFERENCES users (id)
     )
   `);
+  
+  // Add uuid column if it doesn't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE threads ADD COLUMN uuid TEXT UNIQUE`);
+  } catch {
+    // Column already exists or other error, ignore
+  }
+  
+  // Update existing threads that don't have UUIDs
+  const threadsWithoutUuid = db.prepare("SELECT id FROM threads WHERE uuid IS NULL").all();
+  for (const thread of threadsWithoutUuid) {
+    const uuid = crypto.randomUUID();
+    db.prepare("UPDATE threads SET uuid = ? WHERE id = ?").run(uuid, thread.id);
+  }
   
   // Create trigger to update updated_at timestamp
   db.exec(`
@@ -108,11 +124,12 @@ export function getUserById(id: number): User | null {
 }
 
 // Thread operations
-export function createThread(thread: Omit<Thread, "id" | "created_at" | "updated_at">): Thread {
+export function createThread(thread: Omit<Thread, "id" | "uuid" | "created_at" | "updated_at">): Thread {
+  const uuid = crypto.randomUUID();
   const stmt = getDB().prepare(
-    "INSERT INTO threads (user_id, title, messages, llm_provider) VALUES (?, ?, ?, ?) RETURNING *"
+    "INSERT INTO threads (uuid, user_id, title, messages, llm_provider) VALUES (?, ?, ?, ?, ?) RETURNING *"
   );
-  const result = stmt.get(thread.user_id, thread.title, thread.messages, thread.llm_provider);
+  const result = stmt.get(uuid, thread.user_id, thread.title, thread.messages, thread.llm_provider);
   return result as Thread;
 }
 
@@ -128,6 +145,12 @@ export function getThreadById(id: number): Thread | null {
   return result as Thread || null;
 }
 
+export function getThreadByUuid(uuid: string): Thread | null {
+  const stmt = getDB().prepare("SELECT * FROM threads WHERE uuid = ?");
+  const result = stmt.get(uuid);
+  return result as Thread || null;
+}
+
 export function updateThread(id: number, updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>): void {
   const setClause = Object.keys(updates).map(key => `${key} = ?`).join(", ");
   const values = Object.values(updates);
@@ -136,7 +159,20 @@ export function updateThread(id: number, updates: Partial<Pick<Thread, "title" |
   stmt.run(...values, id);
 }
 
+export function updateThreadByUuid(uuid: string, updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>): void {
+  const setClause = Object.keys(updates).map(key => `${key} = ?`).join(", ");
+  const values = Object.values(updates);
+  
+  const stmt = getDB().prepare(`UPDATE threads SET ${setClause} WHERE uuid = ?`);
+  stmt.run(...values, uuid);
+}
+
 export function deleteThread(id: number): void {
   const stmt = getDB().prepare("DELETE FROM threads WHERE id = ?");
   stmt.run(id);
+}
+
+export function deleteThreadByUuid(uuid: string): void {
+  const stmt = getDB().prepare("DELETE FROM threads WHERE uuid = ?");
+  stmt.run(uuid);
 } 

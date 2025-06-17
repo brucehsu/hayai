@@ -23,7 +23,7 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
                 name="provider"
                 class="border border-gray-300 rounded px-3 py-1 text-sm"
                 value={currentThread.llm_provider}
-                onchange="this.form.submit()"
+                onChange="this.form.submit()"
               >
                 <option value="openai">OpenAI GPT-4</option>
                 <option value="anthropic">Anthropic Claude</option>

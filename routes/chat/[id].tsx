@@ -1,6 +1,6 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../utils/session.ts";
-import { getThreadById, getThreadsByUserId, updateThread } from "../../db/database.ts";
+import { getThreadByUuid, getThreadsByUserId, updateThreadByUuid } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
 
 interface PageData {
@@ -13,7 +13,7 @@ interface PageData {
 export const handler: Handlers<PageData> = {
   async GET(req, ctx) {
     const session = await getSessionFromRequest(req);
-    const threadId = parseInt(ctx.params.id);
+    const threadUuid = ctx.params.id;
     
     let threads = [];
     let currentThread = null;
@@ -21,7 +21,7 @@ export const handler: Handlers<PageData> = {
     
     if (session) {
       threads = getThreadsByUserId(session.userId);
-      currentThread = getThreadById(threadId);
+      currentThread = getThreadByUuid(threadUuid);
       
       if (currentThread && currentThread.user_id !== session.userId) {
         error = "Access denied";
@@ -47,8 +47,8 @@ export const handler: Handlers<PageData> = {
       return new Response("Please log in to save messages", { status: 401 });
     }
     
-    const threadId = parseInt(ctx.params.id);
-    const currentThread = getThreadById(threadId);
+    const threadUuid = ctx.params.id;
+    const currentThread = getThreadByUuid(threadUuid);
     
     if (!currentThread || currentThread.user_id !== session.userId) {
       return new Response("Thread not found", { status: 404 });
@@ -84,14 +84,14 @@ export const handler: Handlers<PageData> = {
     messages.push(aiMessage);
     
     // Update thread
-    updateThread(threadId, {
+    updateThreadByUuid(threadUuid, {
       messages: JSON.stringify(messages),
       llm_provider: provider
     });
     
     // Redirect back to the same thread
     const headers = new Headers();
-    headers.set("location", `/chat/${threadId}`);
+    headers.set("location", `/chat/${threadUuid}`);
     return new Response(null, { status: 302, headers });
   }
 };
