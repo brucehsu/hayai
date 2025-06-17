@@ -92,7 +92,7 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
                 class="border border-gray-300 rounded px-3 py-1 text-sm"
                 value={currentThread.llm_provider}
                 onChange={(e) => (e.target as HTMLSelectElement).form?.submit()}
-                disabled={isSubmitting}
+                disabled={true}
               >
                 <option value="openai">OpenAI GPT-4o</option>
                 <option value="anthropic">Anthropic Claude</option>
