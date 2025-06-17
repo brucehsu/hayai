@@ -7,7 +7,6 @@ interface ChatAreaProps {
 
 export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.Element {
   const messages = currentThread ? JSON.parse(currentThread.messages || "[]") : [];
-
   return (
     <div class="flex-1 flex flex-col">
       {/* Header with LLM Selector */}
@@ -25,9 +24,9 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
                 value={currentThread.llm_provider}
                 onChange="this.form.submit()"
               >
-                <option value="openai">OpenAI GPT-4</option>
+                <option value="openai">OpenAI GPT-4o</option>
                 <option value="anthropic">Anthropic Claude</option>
-                <option value="gemini">Google Gemini</option>
+                <option value="gemini">Google Gemini 2.5 Flash</option>
               </select>
               <input type="hidden" name="message" value="" />
             </form>
@@ -73,15 +72,20 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
             {messages.map((message: any, index: number) => (
               <div
                 key={index}
-                class={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                class={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
               >
                 <div
                   class={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                    message.role === "user"
+                    message.type === "user"
                       ? "bg-blue-600 text-white"
                       : "bg-white text-gray-800 border border-gray-200"
                   }`}
                 >
+                  {message.type !== "user" && (
+                    <p class="text-xs text-gray-500 mb-1 font-medium">
+                      {message.type}
+                    </p>
+                  )}
                   <p class="text-sm whitespace-pre-wrap">{message.content}</p>
                   <p class="text-xs mt-1 opacity-70">
                     {new Date(message.timestamp).toLocaleTimeString()}
@@ -125,9 +129,9 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
                 required
               />
               <select name="provider" class="border border-gray-300 rounded px-3 py-2 text-sm">
-                <option value="openai">OpenAI GPT-4</option>
+                <option value="openai">OpenAI GPT-4o</option>
                 <option value="anthropic">Anthropic Claude</option>
-                <option value="gemini">Google Gemini</option>
+                <option value="gemini">Google Gemini 2.5 Flash</option>
               </select>
               <button
                 type="submit"

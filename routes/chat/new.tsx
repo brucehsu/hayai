@@ -2,6 +2,8 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../utils/session.ts";
 import { createThread, getThreadsByUserId } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
+import { aiManager } from "../../lib/ai/ai-manager.ts";
+import { AIMessage } from "../../lib/ai/types.ts";
 
 interface PageData {
   user: { id: number; name: string; email: string } | null;
@@ -40,15 +42,33 @@ export const handler: Handlers<PageData> = {
       // For anonymous users, create a temporary chat session
       const userMessage = {
         id: crypto.randomUUID(),
-        role: "user",
+        type: "user",
         content: message.trim(),
         timestamp: new Date().toISOString()
       };
       
+      // Get AI response
+      let aiContent = `Hello! I'm ${aiManager.getProviderDisplayName(provider as any)}. You're chatting anonymously - sign in to save your conversations!`;
+      let modelUsed = provider;
+      
+      try {
+        if (aiManager.isProviderAvailable(provider as any)) {
+          const aiResponse = await aiManager.chat(
+            [{ role: "user", content: message.trim() }] as AIMessage[],
+            provider as any
+          );
+          aiContent = aiResponse.content;
+          modelUsed = aiResponse.model;
+        }
+      } catch (error) {
+        console.error("AI API Error:", error);
+        aiContent = `Sorry, I encountered an error with ${provider}. ${error.message || "Please try again later."}`;
+      }
+      
       const aiMessage = {
         id: crypto.randomUUID(),
-        role: "assistant", 
-        content: `Hello! This is a mock response from ${provider}. You're chatting anonymously - sign in to save your conversations! In a real implementation, this would call the actual AI API.`,
+        type: modelUsed, 
+        content: aiContent,
         timestamp: new Date().toISOString()
       };
       
@@ -72,15 +92,33 @@ export const handler: Handlers<PageData> = {
     // For logged-in users, save to database
     const userMessage = {
       id: crypto.randomUUID(),
-      role: "user",
+      type: "user",
       content: message.trim(),
       timestamp: new Date().toISOString()
     };
     
+    // Get AI response
+    let aiContent = `Hello! I'm ${aiManager.getProviderDisplayName(provider as any)}. Thanks for signing in - your conversations will be saved!`;
+    let modelUsed = provider;
+    
+    try {
+      if (aiManager.isProviderAvailable(provider as any)) {
+        const aiResponse = await aiManager.chat(
+          [{ role: "user", content: message.trim() }] as AIMessage[],
+          provider as any
+        );
+        aiContent = aiResponse.content;
+        modelUsed = aiResponse.model;
+      }
+    } catch (error) {
+      console.error("AI API Error:", error);
+      aiContent = `Sorry, I encountered an error with ${provider}. ${error.message || "Please try again later."}`;
+    }
+    
     const aiMessage = {
       id: crypto.randomUUID(),
-      role: "assistant", 
-      content: `Hello! This is a mock response from ${provider}. In a real implementation, this would call the actual AI API with your configured keys.`,
+      type: modelUsed, 
+      content: aiContent,
       timestamp: new Date().toISOString()
     };
 
