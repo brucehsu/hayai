@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { getSessionFromRequest } from "../../utils/session.ts";
+import { getSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
 import { getThreadByUuid, getThreadsByUserId, updateThreadByUuid } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
 import { aiManager } from "../../lib/ai/ai-manager.ts";
@@ -14,24 +14,64 @@ interface PageData {
 
 export const handler: Handlers<PageData> = {
   async GET(req, ctx) {
-    const session = await getSessionFromRequest(req);
+    let session = await getSessionFromRequest(req);
     const threadUuid = ctx.params.id;
     
-    let threads = [];
-    let currentThread = null;
+    // If no session, create a guest user
+    if (!session) {
+      const guestUser = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession({
+        userId: guestUser.id,
+        email: guestUser.email,
+        name: guestUser.name,
+      });
+      
+      session = {
+        userId: guestUser.id,
+        email: guestUser.email,
+        name: guestUser.name,
+      };
+      
+      // Set session cookie
+      const headers = new Headers();
+      setSessionCookie(headers, sessionToken);
+      
+      // Return response with redirect if guest can't access this thread
+      const currentThread = getThreadByUuid(threadUuid);
+      if (!currentThread || currentThread.user_id !== guestUser.id) {
+        headers.set("location", "/");
+        return new Response(null, { status: 302, headers });
+      }
+      
+      // Return response with session cookie
+      const response = await ctx.render({
+        user: session,
+        threads: getThreadsByUserId(guestUser.id),
+        currentThread,
+        error: undefined
+      });
+      
+      // Copy headers to response
+      for (const [key, value] of headers.entries()) {
+        response.headers.set(key, value);
+      }
+      
+      return response;
+    }
+    
+    // Load data for existing session
+    const threads = getThreadsByUserId(session.userId);
+    const currentThread = getThreadByUuid(threadUuid);
     let error = undefined;
     
-    if (session) {
-      threads = getThreadsByUserId(session.userId);
-      currentThread = getThreadByUuid(threadUuid);
-      
-      if (currentThread && currentThread.user_id !== session.userId) {
-        error = "Access denied";
-        currentThread = null;
-      }
-    } else {
-      // Anonymous users can't access saved threads
-      error = "Please log in to view saved conversations";
+    if (currentThread && currentThread.user_id !== session.userId) {
+      error = "Access denied";
+      return ctx.render({
+        user: session,
+        threads,
+        currentThread: null,
+        error
+      });
     }
     
     return ctx.render({
@@ -43,10 +83,22 @@ export const handler: Handlers<PageData> = {
   },
   
   async POST(req, ctx) {
-    const session = await getSessionFromRequest(req);
+    let session = await getSessionFromRequest(req);
     
+    // If no session, create a guest user
     if (!session) {
-      return new Response("Please log in to save messages", { status: 401 });
+      const guestUser = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession({
+        userId: guestUser.id,
+        email: guestUser.email,
+        name: guestUser.name,
+      });
+      
+      session = {
+        userId: guestUser.id,
+        email: guestUser.email,
+        name: guestUser.name,
+      };
     }
     
     const threadUuid = ctx.params.id;

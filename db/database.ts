@@ -5,7 +5,8 @@ export interface User {
   email: string;
   name: string;
   avatar_url?: string;
-  google_id: string;
+  oauth_id: string;
+  oauth_type: "google" | "guest";
   created_at: string;
   updated_at: string;
 }
@@ -42,7 +43,8 @@ export function initDB() {
       email TEXT UNIQUE NOT NULL,
       name TEXT NOT NULL,
       avatar_url TEXT,
-      google_id TEXT UNIQUE NOT NULL,
+      oauth_id TEXT UNIQUE NOT NULL,
+      oauth_type TEXT NOT NULL DEFAULT 'google',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
@@ -105,15 +107,27 @@ export function getDB(): Database {
 // User operations
 export function createUser(user: Omit<User, "id" | "created_at" | "updated_at">): User {
   const stmt = getDB().prepare(
-    "INSERT INTO users (email, name, avatar_url, google_id) VALUES (?, ?, ?, ?) RETURNING *"
+    "INSERT INTO users (email, name, avatar_url, oauth_id, oauth_type) VALUES (?, ?, ?, ?, ?) RETURNING *"
   );
-  const result = stmt.get(user.email, user.name, user.avatar_url, user.google_id);
+  const result = stmt.get(user.email, user.name, user.avatar_url || null, user.oauth_id, user.oauth_type);
   return result as User;
 }
 
+export function getUserByOAuthId(oauthId: string): User | null {
+  const stmt = getDB().prepare("SELECT * FROM users WHERE oauth_id = ?");
+  const result = stmt.get(oauthId);
+  return result as User || null;
+}
+
 export function getUserByGoogleId(googleId: string): User | null {
-  const stmt = getDB().prepare("SELECT * FROM users WHERE google_id = ?");
+  const stmt = getDB().prepare("SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'google'");
   const result = stmt.get(googleId);
+  return result as User || null;
+}
+
+export function getUserByGuestId(guestId: string): User | null {
+  const stmt = getDB().prepare("SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'guest'");
+  const result = stmt.get(guestId);
   return result as User || null;
 }
 
