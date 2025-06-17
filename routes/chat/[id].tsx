@@ -1,12 +1,12 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { getSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
+import { getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
 import { getThreadByUuid, getThreadsByUserId, updateThreadByUuid } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage } from "../../lib/ai/types.ts";
 
 interface PageData {
-  user: { id: number; name: string; email: string } | null;
+  user: { id: number; name: string; email: string; isLoggedIn: boolean } | null;
   threads: any[];
   currentThread: any;
   error?: string;
@@ -14,22 +14,18 @@ interface PageData {
 
 export const handler: Handlers<PageData> = {
   async GET(req, ctx) {
-    let session = await getSessionFromRequest(req);
+    let extendedSession = await getExtendedSessionFromRequest(req);
     const threadUuid = ctx.params.id;
     
     // If no session, create a guest user
-    if (!session) {
-      const guestUser = await getOrCreateGuestUser(req);
-      const sessionToken = await createSession({
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
-      });
+    if (!extendedSession) {
+      const { user: guestUser, sessionData } = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession(sessionData);
       
-      session = {
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
+      extendedSession = {
+        ...sessionData,
+        isGuest: true,
+        isLoggedIn: false
       };
       
       // Set session cookie
@@ -45,7 +41,12 @@ export const handler: Handlers<PageData> = {
       
       // Return response with session cookie
       const response = await ctx.render({
-        user: session,
+        user: {
+          id: extendedSession.userId,
+          name: extendedSession.name,
+          email: extendedSession.email,
+          isLoggedIn: extendedSession.isLoggedIn
+        },
         threads: getThreadsByUserId(guestUser.id),
         currentThread,
         error: undefined
@@ -60,14 +61,19 @@ export const handler: Handlers<PageData> = {
     }
     
     // Load data for existing session
-    const threads = getThreadsByUserId(session.userId);
+    const threads = getThreadsByUserId(extendedSession.userId);
     const currentThread = getThreadByUuid(threadUuid);
     let error = undefined;
     
-    if (currentThread && currentThread.user_id !== session.userId) {
-      error = "Access denied";
+    if (currentThread && currentThread.user_id !== extendedSession.userId) {
+      const error = "Access denied";
       return ctx.render({
-        user: session,
+        user: {
+          id: extendedSession.userId,
+          name: extendedSession.name,
+          email: extendedSession.email,
+          isLoggedIn: extendedSession.isLoggedIn
+        },
         threads,
         currentThread: null,
         error
@@ -75,7 +81,12 @@ export const handler: Handlers<PageData> = {
     }
     
     return ctx.render({
-      user: session,
+      user: {
+        id: extendedSession.userId,
+        name: extendedSession.name,
+        email: extendedSession.email,
+        isLoggedIn: extendedSession.isLoggedIn
+      },
       threads,
       currentThread,
       error
@@ -83,28 +94,24 @@ export const handler: Handlers<PageData> = {
   },
   
   async POST(req, ctx) {
-    let session = await getSessionFromRequest(req);
+    let extendedSession = await getExtendedSessionFromRequest(req);
     
     // If no session, create a guest user
-    if (!session) {
-      const guestUser = await getOrCreateGuestUser(req);
-      const sessionToken = await createSession({
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
-      });
+    if (!extendedSession) {
+      const { user: guestUser, sessionData } = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession(sessionData);
       
-      session = {
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
+      extendedSession = {
+        ...sessionData,
+        isGuest: true,
+        isLoggedIn: false
       };
     }
     
     const threadUuid = ctx.params.id;
     const currentThread = getThreadByUuid(threadUuid);
     
-    if (!currentThread || currentThread.user_id !== session.userId) {
+    if (!currentThread || currentThread.user_id !== extendedSession.userId) {
       return new Response("Thread not found", { status: 404 });
     }
     
@@ -165,11 +172,16 @@ export const handler: Handlers<PageData> = {
     });
     
     // Instead of redirecting, return the updated page data directly
-    const threads = getThreadsByUserId(session.userId);
+    const threads = getThreadsByUserId(extendedSession.userId);
     const updatedThread = getThreadByUuid(threadUuid);
     
     return ctx.render({
-      user: session,
+      user: {
+        id: extendedSession.userId,
+        name: extendedSession.name,
+        email: extendedSession.email,
+        isLoggedIn: extendedSession.isLoggedIn
+      },
       threads,
       currentThread: updatedThread,
       error: undefined

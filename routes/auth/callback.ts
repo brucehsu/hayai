@@ -1,6 +1,6 @@
 import { Handlers } from "$fresh/server.ts";
 import { createUser, getUserByGoogleId } from "../../db/database.ts";
-import { createSession, setSessionCookie } from "../../utils/session.ts";
+import { clearSession, createSession, setSessionCookie } from "../../utils/session.ts";
 
 export const handler: Handlers = {
   async GET(req) {
