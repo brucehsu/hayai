@@ -12,7 +12,7 @@ interface ChatLayoutProps {
 export default function ChatLayout({ user, threads, currentThread, error }: ChatLayoutProps): JSX.Element {
   return (
     <div class="flex h-screen bg-gray-100">
-      <Sidebar user={user} threads={threads} />
+      <Sidebar user={user} threads={threads} currentThread={currentThread} />
       <ChatArea currentThread={currentThread} error={error} />
     </div>
   );
