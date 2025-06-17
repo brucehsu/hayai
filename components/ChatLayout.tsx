@@ -1,6 +1,6 @@
 import { JSX } from "preact";
 import Sidebar from "./Sidebar.tsx";
-import ChatArea from "./ChatArea.tsx";
+import ChatArea from "../islands/ChatArea.tsx";
 
 interface ChatLayoutProps {
   user: { id: number; name: string; email: string; isLoggedIn: boolean } | null;

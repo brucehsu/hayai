@@ -10,7 +10,7 @@ import * as $auth_logout from "./routes/auth/logout.ts";
 import * as $chat_id_ from "./routes/chat/[id].tsx";
 import * as $chat_new from "./routes/chat/new.tsx";
 import * as $index from "./routes/index.tsx";
-
+import * as $ChatArea from "./islands/ChatArea.tsx";
 import { type Manifest } from "$fresh/server.ts";
 
 const manifest = {
@@ -24,7 +24,9 @@ const manifest = {
     "./routes/chat/new.tsx": $chat_new,
     "./routes/index.tsx": $index,
   },
-  islands: {},
+  islands: {
+    "./islands/ChatArea.tsx": $ChatArea,
+  },
   baseUrl: import.meta.url,
 } satisfies Manifest;
 

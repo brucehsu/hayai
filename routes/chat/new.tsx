@@ -1,5 +1,5 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
+import { getSessionFromRequest, getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
 import { createThread, getThreadsByUserId } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
 import { aiManager } from "../../lib/ai/ai-manager.ts";
@@ -18,18 +18,10 @@ export const handler: Handlers<PageData> = {
     
     // If no session, create a guest user
     if (!session) {
-      const guestUser = await getOrCreateGuestUser(req);
-      const sessionToken = await createSession({
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
-      });
+      const guestResult = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession(guestResult.sessionData);
       
-      session = {
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
-      };
+      session = guestResult.sessionData;
       
       // Set session cookie
       const headers = new Headers();
@@ -38,7 +30,7 @@ export const handler: Handlers<PageData> = {
       // Return response with session cookie
       const response = await ctx.render({
         user: session,
-        threads: getThreadsByUserId(guestUser.id),
+        threads: getThreadsByUserId(guestResult.sessionData.userId),
         currentThread: null
       });
       
@@ -72,18 +64,10 @@ export const handler: Handlers<PageData> = {
     
     // If no session, create a guest user
     if (!session) {
-      const guestUser = await getOrCreateGuestUser(req);
-      const sessionToken = await createSession({
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
-      });
+      const guestResult = await getOrCreateGuestUser(req);
+      const sessionToken = await createSession(guestResult.sessionData);
       
-      session = {
-        userId: guestUser.id,
-        email: guestUser.email,
-        name: guestUser.name,
-      };
+      session = guestResult.sessionData;
     }
     
     // For all users (now including guests), save to database
