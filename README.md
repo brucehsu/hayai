@@ -316,6 +316,9 @@ The project follows standard Deno and Fresh conventions:
 - TypeScript strict mode is enabled
 - All AI clients must implement the `AIClient` interface
 
+## TODO
+- Purge guest accounts and threads periodically
+
 ## License
 
 MIT License - feel free to use this project as a starting point for your own AI chat applications. 
