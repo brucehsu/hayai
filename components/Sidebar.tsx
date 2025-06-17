@@ -48,7 +48,7 @@ export default function Sidebar({ user, threads }: SidebarProps): JSX.Element {
                 threads.map((thread: any) => (
                   <a
                     key={thread.id}
-                    href={`/chat/${thread.id}`}
+                    href={`/chat/${thread.uuid}`}
                     class="block p-3 mb-2 rounded-md hover:bg-gray-800 transition-colors"
                   >
                     <div class="font-medium text-sm truncate">{thread.title}</div>

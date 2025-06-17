@@ -95,7 +95,7 @@ export const handler: Handlers<PageData> = {
     });
     
     const headers = new Headers();
-    headers.set("location", `/chat/${newThread.id}`);
+    headers.set("location", `/chat/${newThread.uuid}`);
     return new Response(null, { status: 302, headers });
   }
 };
