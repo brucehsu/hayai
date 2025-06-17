@@ -46,7 +46,8 @@ export const handler: Handlers = {
           email: googleUser.email,
           name: googleUser.name,
           avatar_url: googleUser.picture,
-          google_id: googleUser.id,
+          oauth_id: googleUser.id,
+          oauth_type: "google",
         });
       }
       
@@ -55,6 +56,7 @@ export const handler: Handlers = {
         userId: user.id,
         email: user.email,
         name: user.name,
+        oauth_type: "google",
       });
       
       // Set session cookie and redirect

@@ -3,7 +3,7 @@ import Sidebar from "./Sidebar.tsx";
 import ChatArea from "./ChatArea.tsx";
 
 interface ChatLayoutProps {
-  user: { id: number; name: string; email: string } | null;
+  user: { id: number; name: string; email: string; isLoggedIn: boolean } | null;
   threads: any[];
   currentThread: any;
   error?: string;
