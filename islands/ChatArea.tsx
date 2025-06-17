@@ -1,4 +1,5 @@
 import { JSX } from "preact";
+import { useState } from "preact/hooks";
 
 interface ChatAreaProps {
   currentThread: any;
@@ -6,7 +7,74 @@ interface ChatAreaProps {
 }
 
 export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.Element {
-  const messages = currentThread ? JSON.parse(currentThread.messages || "[]") : [];
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
+  
+  const baseMessages = currentThread ? JSON.parse(currentThread.messages || "[]") : [];
+  const allMessages = [...baseMessages, ...optimisticMessages];
+
+  const handleExistingThreadSubmit = (e: Event) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const message = formData.get('message') as string;
+    
+    if (!message.trim()) return;
+    
+    setIsSubmitting(true);
+    
+    // Add user message optimistically
+    const userMessage = {
+      type: "user",
+      content: message.trim(),
+      timestamp: new Date().toISOString()
+    };
+    
+    setOptimisticMessages(prev => [...prev, userMessage]);
+    
+    // Clear the input
+    const messageInput = form.querySelector('input[name="message"]') as HTMLInputElement;
+    messageInput.value = '';
+    
+    // Submit the form
+    fetch(window.location.href, {
+      method: 'POST',
+      body: formData
+    }).then(() => {
+      // Reset optimistic messages and reload the page to get the AI response
+      setOptimisticMessages([]);
+      setIsSubmitting(false);
+      window.location.reload();
+    }).catch(() => {
+      setIsSubmitting(false);
+      // Remove the optimistic message on error
+      setOptimisticMessages(prev => prev.slice(0, -1));
+    });
+  };
+
+  const handleNewChatSubmit = (e: Event) => {
+    e.preventDefault();
+    const form = e.target as HTMLFormElement;
+    const formData = new FormData(form);
+    const message = formData.get('message') as string;
+    
+    if (!message.trim()) return;
+    
+    setIsSubmitting(true);
+    
+    // Submit the form
+    fetch('/chat/new', {
+      method: 'POST',
+      body: formData
+    }).then(response => {
+      if (response.redirected) {
+        window.location.href = response.url;
+      }
+    }).catch(() => {
+      setIsSubmitting(false);
+    });
+  };
+
   return (
     <div class="flex-1 flex flex-col">
       {/* Header with LLM Selector */}
@@ -22,7 +90,8 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
                 name="provider"
                 class="border border-gray-300 rounded px-3 py-1 text-sm"
                 value={currentThread.llm_provider}
-                onChange="this.form.submit()"
+                onChange={(e) => (e.target as HTMLSelectElement).form?.submit()}
+                disabled={isSubmitting}
               >
                 <option value="openai">OpenAI GPT-4o</option>
                 <option value="anthropic">Anthropic Claude</option>
@@ -61,7 +130,7 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
               </a>
             </div>
           </div>
-        ) : messages.length === 0 ? (
+        ) : allMessages.length === 0 ? (
           <div class="flex items-center justify-center h-full">
             <div class="text-center text-gray-500">
               <p>No messages yet. Start the conversation!</p>
@@ -69,7 +138,7 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
           </div>
         ) : (
           <div class="space-y-4">
-            {messages.map((message: any, index: number) => (
+            {allMessages.map((message: any, index: number) => (
               <div
                 key={index}
                 class={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
@@ -93,6 +162,14 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
                 </div>
               </div>
             ))}
+            {isSubmitting && currentThread && (
+              <div class="flex justify-start">
+                <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-white text-gray-800 border border-gray-200">
+                  <p class="text-xs text-gray-500 mb-1 font-medium">AI</p>
+                  <p class="text-sm text-gray-500">Thinking...</p>
+                </div>
+              </div>
+            )}
           </div>
         )}
       </div>
@@ -101,43 +178,51 @@ export default function ChatArea({ currentThread, error }: ChatAreaProps): JSX.E
       {!error && (
         currentThread ? (
           <div class="bg-white border-t border-gray-200 p-4">
-            <form method="post" class="flex gap-2">
+            <form onSubmit={handleExistingThreadSubmit} class="flex gap-2">
               <input
                 type="text"
-                placeholder="Type your message..."
-                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={isSubmitting ? "Sending..." : "Type your message..."}
+                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 name="message"
                 required
+                disabled={isSubmitting}
               />
               <input type="hidden" name="provider" value={currentThread.llm_provider} />
               <button
                 type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
               >
-                Send
+                {isSubmitting ? "Sending..." : "Send"}
               </button>
             </form>
           </div>
         ) : (
           <div class="bg-white border-t border-gray-200 p-4">
-            <form action="/chat/new" method="post" class="flex gap-2">
+            <form onSubmit={handleNewChatSubmit} class="flex gap-2">
               <input
                 type="text"
-                placeholder="Start a new conversation..."
-                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder={isSubmitting ? "Starting chat..." : "Start a new conversation..."}
+                class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                 name="message"
                 required
+                disabled={isSubmitting}
               />
-              <select name="provider" class="border border-gray-300 rounded px-3 py-2 text-sm">
+              <select 
+                name="provider" 
+                class="border border-gray-300 rounded px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
+              >
                 <option value="openai">OpenAI GPT-4o</option>
                 <option value="anthropic">Anthropic Claude</option>
                 <option value="gemini">Google Gemini 2.5 Flash</option>
               </select>
               <button
                 type="submit"
-                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors"
+                class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                disabled={isSubmitting}
               >
-                Start Chat
+                {isSubmitting ? "Starting..." : "Start Chat"}
               </button>
             </form>
           </div>
