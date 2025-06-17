@@ -115,7 +115,7 @@ export class AIManager {
       case "openai":
         return ["gpt-4o-2024-08-06", "gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"];
       case "gemini":
-        return ["gemini-2.5-flash-preview-05-20", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
+        return ["gemini-2.5-flash", "gemini-1.5-flash", "gemini-1.5-pro", "gemini-pro"];
       case "anthropic":
         return ["claude-3-sonnet", "claude-3-haiku"];
       default:

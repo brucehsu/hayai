@@ -86,7 +86,7 @@ A full-stack AI chat web application built with Deno Fresh, featuring multiple A
 ```json
 {
   "id": "uuid",
-  "type": "user" | "gpt-4o-2024-08-06" | "gemini-2.5-flash-preview-05-20",
+  "type": "user" | "gpt-4o-2024-08-06" | "gemini-2.5-flash",
   "content": "message content",
   "timestamp": "ISO 8601 string"
 }
@@ -113,7 +113,7 @@ The application features a sophisticated AI client system that provides:
 - **Configuration**: Requires `OPENAI_API_KEY`
 
 #### Google Gemini (Fully Implemented)
-- **Default Model**: Gemini-2.5-flash-preview-05-20
+- **Default Model**: gemini-2.5-flash
 - **Available Models**: Gemini-1.5-flash, Gemini-1.5-pro, Gemini-pro
 - **Features**: Chat completion with message format conversion
 - **Configuration**: Requires `GEMINI_API_KEY`

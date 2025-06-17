@@ -112,7 +112,7 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 - **Requires**: `OPENAI_API_KEY` environment variable
 
 ### Google Gemini
-- **Models**: Gemini-2.5-flash-preview-05-20 (default), Gemini-1.5-flash, Gemini-1.5-pro, Gemini-pro
+- **Models**: gemini-2.5-flash (default), Gemini-1.5-flash, Gemini-1.5-pro, Gemini-pro
 - **Features**: Chat completion with automatic message format conversion
 - **Requires**: `GEMINI_API_KEY` environment variable
 - **Note**: System messages are converted to user messages with "System:" prefix

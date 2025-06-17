@@ -24,7 +24,7 @@ export interface Thread {
 
 export interface Message {
   id: string;
-  type: string; // "user" or model name like "gpt-4o-2024-08-06", "gemini-2.5-flash-preview-05-20"
+  type: string; // "user" or model name like "gpt-4o-2024-08-06", "gemini-2.5-flash"
   content: string;
   timestamp: string;
 }
