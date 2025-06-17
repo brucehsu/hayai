@@ -23,7 +23,7 @@ export interface Thread {
 
 export interface Message {
   id: string;
-  role: "user" | "assistant";
+  type: string; // "user" or model name like "gpt-4o-2024-08-06", "gemini-2.5-flash-preview-05-20"
   content: string;
   timestamp: string;
 }
@@ -175,4 +175,5 @@ export function deleteThread(id: number): void {
 export function deleteThreadByUuid(uuid: string): void {
   const stmt = getDB().prepare("DELETE FROM threads WHERE uuid = ?");
   stmt.run(uuid);
-} 
+}
+ 

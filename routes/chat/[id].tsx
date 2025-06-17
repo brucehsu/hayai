@@ -2,6 +2,8 @@ import { Handlers, PageProps } from "$fresh/server.ts";
 import { getSessionFromRequest } from "../../utils/session.ts";
 import { getThreadByUuid, getThreadsByUserId, updateThreadByUuid } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
+import { aiManager } from "../../lib/ai/ai-manager.ts";
+import { AIMessage } from "../../lib/ai/types.ts";
 
 interface PageData {
   user: { id: number; name: string; email: string } | null;
@@ -68,17 +70,38 @@ export const handler: Handlers<PageData> = {
     // Add user message
     const userMessage = {
       id: crypto.randomUUID(),
-      role: "user",
+      type: "user",
       content: message.trim(),
       timestamp: new Date().toISOString()
     };
     messages.push(userMessage);
     
-    // Mock AI response (replace with actual AI API call)
+    // Get AI response
+    let aiContent = `I'm ${aiManager.getProviderDisplayName(provider as any)}. Thanks for continuing our conversation!`;
+    let modelUsed = provider;
+    
+    try {
+      if (aiManager.isProviderAvailable(provider as any)) {
+        // Convert message history to AI client format
+        const aiMessages: AIMessage[] = messages.map((msg: any) => ({
+          role: msg.type === "user" ? "user" : "assistant",
+          content: msg.content,
+          timestamp: msg.timestamp
+        }));
+        
+        const aiResponse = await aiManager.chat(aiMessages, provider as any);
+        aiContent = aiResponse.content;
+        modelUsed = aiResponse.model;
+      }
+    } catch (error) {
+      console.error("AI API Error:", error);
+      aiContent = `Sorry, I encountered an error with ${provider}. ${error.message || "Please try again later."}`;
+    }
+    
     const aiMessage = {
       id: crypto.randomUUID(),
-      role: "assistant",
-      content: `This is a mock response from ${provider}. In a real implementation, this would call the actual AI API with your configured keys.`,
+      type: modelUsed,
+      content: aiContent,
       timestamp: new Date().toISOString()
     };
     messages.push(aiMessage);
@@ -89,10 +112,16 @@ export const handler: Handlers<PageData> = {
       llm_provider: provider
     });
     
-    // Redirect back to the same thread
-    const headers = new Headers();
-    headers.set("location", `/chat/${threadUuid}`);
-    return new Response(null, { status: 302, headers });
+    // Instead of redirecting, return the updated page data directly
+    const threads = getThreadsByUserId(session.userId);
+    const updatedThread = getThreadByUuid(threadUuid);
+    
+    return ctx.render({
+      user: session,
+      threads,
+      currentThread: updatedThread,
+      error: undefined
+    });
   }
 };
 
