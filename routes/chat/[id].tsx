@@ -1,12 +1,21 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../../utils/session.ts";
+import { getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie, canGuestSendMessage } from "../../utils/session.ts";
 import { getThreadByUuid, getThreadsByUserId, updateThreadByUuid } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage } from "../../lib/ai/types.ts";
 
 interface PageData {
-  user: { id: number; name: string; email: string; isLoggedIn: boolean } | null;
+  user: { 
+    id: number; 
+    name: string; 
+    email: string; 
+    isLoggedIn: boolean;
+    messageCount?: number;
+    messageLimit?: number;
+    messagesRemaining?: number;
+    isRateLimited?: boolean;
+  } | null;
   threads: any[];
   currentThread: any;
   error?: string;
@@ -45,7 +54,11 @@ export const handler: Handlers<PageData> = {
           id: extendedSession.userId,
           name: extendedSession.name,
           email: extendedSession.email,
-          isLoggedIn: extendedSession.isLoggedIn
+          isLoggedIn: extendedSession.isLoggedIn,
+          messageCount: extendedSession.messageCount,
+          messageLimit: extendedSession.messageLimit,
+          messagesRemaining: extendedSession.messagesRemaining,
+          isRateLimited: extendedSession.isRateLimited
         },
         threads: getThreadsByUserId(guestUser.id),
         currentThread,
@@ -72,7 +85,11 @@ export const handler: Handlers<PageData> = {
           id: extendedSession.userId,
           name: extendedSession.name,
           email: extendedSession.email,
-          isLoggedIn: extendedSession.isLoggedIn
+          isLoggedIn: extendedSession.isLoggedIn,
+          messageCount: extendedSession.messageCount,
+          messageLimit: extendedSession.messageLimit,
+          messagesRemaining: extendedSession.messagesRemaining,
+          isRateLimited: extendedSession.isRateLimited
         },
         threads,
         currentThread: null,
@@ -85,7 +102,11 @@ export const handler: Handlers<PageData> = {
         id: extendedSession.userId,
         name: extendedSession.name,
         email: extendedSession.email,
-        isLoggedIn: extendedSession.isLoggedIn
+        isLoggedIn: extendedSession.isLoggedIn,
+        messageCount: extendedSession.messageCount,
+        messageLimit: extendedSession.messageLimit,
+        messagesRemaining: extendedSession.messagesRemaining,
+        isRateLimited: extendedSession.isRateLimited
       },
       threads,
       currentThread,
@@ -121,6 +142,28 @@ export const handler: Handlers<PageData> = {
     
     if (!message?.trim()) {
       return new Response("Message is required", { status: 400 });
+    }
+    
+    // Check rate limit for guest users
+    if (extendedSession.isGuest && !canGuestSendMessage(extendedSession.userId)) {
+      const threads = getThreadsByUserId(extendedSession.userId);
+      const updatedExtendedSession = await getExtendedSessionFromRequest(req);
+      
+      return ctx.render({
+        user: {
+          id: extendedSession.userId,
+          name: extendedSession.name,
+          email: extendedSession.email,
+          isLoggedIn: extendedSession.isLoggedIn,
+          messageCount: updatedExtendedSession?.messageCount,
+          messageLimit: updatedExtendedSession?.messageLimit,
+          messagesRemaining: updatedExtendedSession?.messagesRemaining,
+          isRateLimited: true
+        },
+        threads,
+        currentThread,
+        error: "You've reached the 10 message limit for guest accounts. Please sign in with Google to continue chatting!"
+      });
     }
     
     // Parse existing messages
@@ -180,7 +223,11 @@ export const handler: Handlers<PageData> = {
         id: extendedSession.userId,
         name: extendedSession.name,
         email: extendedSession.email,
-        isLoggedIn: extendedSession.isLoggedIn
+        isLoggedIn: extendedSession.isLoggedIn,
+        messageCount: extendedSession.messageCount,
+        messageLimit: extendedSession.messageLimit,
+        messagesRemaining: extendedSession.messagesRemaining,
+        isRateLimited: extendedSession.isRateLimited
       },
       threads,
       currentThread: updatedThread,

@@ -1,5 +1,8 @@
 import { getCookies, setCookie } from "$std/http/cookie.ts";
-import { createUser, getUserByGuestId, type User } from "../db/database.ts";
+import { createUser, getUserByGuestId, type User, countUserMessagesForUser } from "../db/database.ts";
+
+// Rate limiting constants
+const GUEST_MESSAGE_LIMIT = 10;
 
 export interface SessionData {
   userId: number;
@@ -11,6 +14,10 @@ export interface SessionData {
 export interface ExtendedSessionData extends SessionData {
   isGuest: boolean;
   isLoggedIn: boolean; // true only for OAuth users
+  messageCount?: number; // for guests only
+  messageLimit?: number; // for guests only
+  messagesRemaining?: number; // for guests only
+  isRateLimited?: boolean; // for guests only
 }
 
 const SESSION_SECRET = Deno.env.get("SESSION_SECRET") || "default-secret-key";
@@ -49,11 +56,28 @@ export async function getExtendedSessionFromRequest(request: Request): Promise<E
   const isGuest = session.oauth_type === "guest";
   const isLoggedIn = session.oauth_type === "google";
   
-  return {
+  let extendedData: ExtendedSessionData = {
     ...session,
     isGuest,
     isLoggedIn
   };
+  
+  // Add rate limiting info for guests
+  if (isGuest) {
+    const messageCount = countUserMessagesForUser(session.userId);
+    const messagesRemaining = Math.max(0, GUEST_MESSAGE_LIMIT - messageCount);
+    const isRateLimited = messageCount >= GUEST_MESSAGE_LIMIT;
+    
+    extendedData = {
+      ...extendedData,
+      messageCount,
+      messageLimit: GUEST_MESSAGE_LIMIT,
+      messagesRemaining,
+      isRateLimited
+    };
+  }
+  
+  return extendedData;
 }
 
 export function setSessionCookie(headers: Headers, token: string): void {
@@ -127,4 +151,29 @@ export async function getOrCreateGuestUser(request: Request): Promise<{ user: Us
   };
   
   return { user, sessionData };
+}
+
+// Check if a guest user can send more messages
+export function canGuestSendMessage(userId: number): boolean {
+  const messageCount = countUserMessagesForUser(userId);
+  return messageCount < GUEST_MESSAGE_LIMIT;
+}
+
+// Get rate limit info for a guest user
+export function getGuestRateLimit(userId: number): { 
+  messageCount: number; 
+  messageLimit: number; 
+  messagesRemaining: number; 
+  isRateLimited: boolean; 
+} {
+  const messageCount = countUserMessagesForUser(userId);
+  const messagesRemaining = Math.max(0, GUEST_MESSAGE_LIMIT - messageCount);
+  const isRateLimited = messageCount >= GUEST_MESSAGE_LIMIT;
+  
+  return {
+    messageCount,
+    messageLimit: GUEST_MESSAGE_LIMIT,
+    messagesRemaining,
+    isRateLimited
+  };
 } 

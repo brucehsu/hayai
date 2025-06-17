@@ -190,4 +190,20 @@ export function deleteThreadByUuid(uuid: string): void {
   const stmt = getDB().prepare("DELETE FROM threads WHERE uuid = ?");
   stmt.run(uuid);
 }
+
+// Rate limiting functions for guest users
+export function countUserMessagesForUser(userId: number): number {
+  const stmt = getDB().prepare("SELECT messages FROM threads WHERE user_id = ?");
+  const threads = stmt.all(userId) as Thread[];
+  
+  let totalUserMessages = 0;
+  
+  for (const thread of threads) {
+    const messages = JSON.parse(thread.messages || "[]") as Message[];
+    const userMessages = messages.filter(msg => msg.type === "user");
+    totalUserMessages += userMessages.length;
+  }
+  
+  return totalUserMessages;
+}
  
