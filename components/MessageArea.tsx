@@ -69,6 +69,7 @@ export default function MessageArea({
             ))}
             {(isSubmitting || isStreaming) && currentThread && (
               <Message
+                key={allMessages.length}
                 message={{
                   type: "assistant",
                   content: isStreaming && streamingMessage
