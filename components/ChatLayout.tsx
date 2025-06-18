@@ -14,16 +14,17 @@ interface ChatLayoutProps {
   } | null;
   threads: any[];
   currentThread: any;
+  isOwner: boolean;
   error?: string;
 }
 
 export default function ChatLayout(
-  { user, threads, currentThread, error }: ChatLayoutProps,
+  { user, threads, currentThread, isOwner, error }: ChatLayoutProps,
 ): JSX.Element {
   return (
     <div class="flex h-screen bg-gray-100">
       <Sidebar user={user} threads={threads} currentThread={currentThread} />
-      <ChatArea currentThread={currentThread} error={error} user={user} />
+      <ChatArea currentThread={currentThread} error={error} user={user} isOwner={isOwner} />
     </div>
   );
 }

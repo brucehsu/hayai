@@ -28,6 +28,7 @@ interface PageData {
   } | null;
   threads: any[];
   currentThread: any;
+  isOwner: boolean;
   error?: string;
 }
 
@@ -72,6 +73,7 @@ export const handler: Handlers<PageData> = {
         },
         threads: getThreadsByUserId(guestUser.id),
         currentThread,
+        isOwner: false,
         error: undefined,
       });
 
@@ -89,22 +91,27 @@ export const handler: Handlers<PageData> = {
     let error = undefined;
 
     if (currentThread && currentThread.user_id !== extendedSession.userId) {
-      const error = "Access denied";
-      return ctx.render({
-        user: {
-          id: extendedSession.userId,
-          name: extendedSession.name,
-          email: extendedSession.email,
-          isLoggedIn: extendedSession.isLoggedIn,
-          messageCount: extendedSession.messageCount,
-          messageLimit: extendedSession.messageLimit,
-          messagesRemaining: extendedSession.messagesRemaining,
-          isRateLimited: extendedSession.isRateLimited,
-        },
-        threads,
-        currentThread: null,
-        error,
-      });
+      // Check if thread is public, if not, deny access
+      if (!currentThread.public) {
+        const error = "Access denied";
+        return ctx.render({
+          user: {
+            id: extendedSession.userId,
+            name: extendedSession.name,
+            email: extendedSession.email,
+            isLoggedIn: extendedSession.isLoggedIn,
+            messageCount: extendedSession.messageCount,
+            messageLimit: extendedSession.messageLimit,
+            messagesRemaining: extendedSession.messagesRemaining,
+            isRateLimited: extendedSession.isRateLimited,
+          },
+          threads,
+          currentThread: null,
+          isOwner: false,
+          error,
+        });
+      }
+      // Thread is public, allow read-only access
     }
 
     return ctx.render({
@@ -120,6 +127,7 @@ export const handler: Handlers<PageData> = {
       },
       threads,
       currentThread,
+      isOwner: currentThread && currentThread.user_id === extendedSession.userId,
       error,
     });
   },
@@ -142,8 +150,13 @@ export const handler: Handlers<PageData> = {
     const threadUuid = ctx.params.id;
     const currentThread = getThreadByUuid(threadUuid);
 
-    if (!currentThread || currentThread.user_id !== extendedSession.userId) {
+    if (!currentThread) {
       return new Response("Thread not found", { status: 404 });
+    }
+
+    // Only thread owner can send messages
+    if (currentThread.user_id !== extendedSession.userId) {
+      return new Response("Access denied - only thread owner can send messages", { status: 403 });
     }
 
     const formData = await req.formData();
@@ -177,6 +190,7 @@ export const handler: Handlers<PageData> = {
         },
         threads,
         currentThread,
+        isOwner: false,
         error:
           "You've reached the 10 message limit for guest accounts. Please sign in with Google to continue chatting!",
       });
@@ -260,6 +274,7 @@ export const handler: Handlers<PageData> = {
       },
       threads,
       currentThread: updatedThread,
+      isOwner: updatedThread && updatedThread.user_id === extendedSession.userId,
       error: undefined,
     });
   },
@@ -271,6 +286,7 @@ export default function ChatThread({ data }: PageProps<PageData>) {
       user={data.user}
       threads={data.threads}
       currentThread={data.currentThread}
+      isOwner={data.isOwner}
       error={data.error}
     />
   );

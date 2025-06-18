@@ -8,6 +8,7 @@ import Button from "../components/Button.tsx";
 interface ChatAreaProps {
   currentThread: any;
   error?: string;
+  isOwner?: boolean;
   user?: {
     id: number;
     name: string;
@@ -20,7 +21,7 @@ interface ChatAreaProps {
 }
 
 export default function ChatArea(
-  { currentThread, error, user }: ChatAreaProps,
+  { currentThread, error, isOwner, user }: ChatAreaProps,
 ): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
@@ -292,7 +293,7 @@ export default function ChatArea(
 
   return (
     <div class="flex-1 flex flex-col">
-      <ChatHeader currentThread={currentThread} title={threadTitle} />
+      <ChatHeader currentThread={currentThread} title={threadTitle} isOwner={isOwner} />
 
       <MessageArea
         error={error}
@@ -353,12 +354,14 @@ export default function ChatArea(
                         type="text"
                         placeholder={isSubmitting || isStreaming
                           ? "Processing..."
+                          : !isOwner
+                          ? "You can only view this shared thread"
                           : "Type your message..."}
                         class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                         name="message"
                         required
                         disabled={isSubmitting || isGuestRateLimited ||
-                          isStreaming}
+                          isStreaming || !isOwner}
                       />
                       <input
                         type="hidden"
@@ -369,7 +372,7 @@ export default function ChatArea(
                         type="submit"
                         variant="submit"
                         disabled={isSubmitting || isGuestRateLimited ||
-                          isStreaming}
+                          isStreaming || !isOwner}
                         class="px-6 py-2 rounded-lg"
                       >
                         {isSubmitting ? "Sending..." : "Send"}

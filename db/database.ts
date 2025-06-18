@@ -18,6 +18,7 @@ export interface Thread {
   title: string;
   messages: string; // JSON string
   llm_provider: string;
+  public: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -59,6 +60,7 @@ export function initDB() {
       title TEXT NOT NULL,
       messages TEXT DEFAULT '[]',
       llm_provider TEXT DEFAULT 'openai',
+      public BOOLEAN DEFAULT FALSE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY (user_id) REFERENCES users (id)
@@ -68,6 +70,13 @@ export function initDB() {
   // Add uuid column if it doesn't exist (for existing databases)
   try {
     db.exec(`ALTER TABLE threads ADD COLUMN uuid TEXT UNIQUE`);
+  } catch {
+    // Column already exists or other error, ignore
+  }
+
+  // Add public column if it doesn't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE threads ADD COLUMN public BOOLEAN DEFAULT FALSE`);
   } catch {
     // Column already exists or other error, ignore
   }
@@ -157,7 +166,7 @@ export function createThread(
 ): Thread {
   const uuid = crypto.randomUUID();
   const stmt = getDB().prepare(
-    "INSERT INTO threads (uuid, user_id, title, messages, llm_provider) VALUES (?, ?, ?, ?, ?) RETURNING *",
+    "INSERT INTO threads (uuid, user_id, title, messages, llm_provider, public) VALUES (?, ?, ?, ?, ?, ?) RETURNING *",
   );
   const result = stmt.get(
     uuid,
@@ -165,6 +174,7 @@ export function createThread(
     thread.title,
     thread.messages,
     thread.llm_provider,
+    thread.public || false,
   );
   return result as Thread;
 }
@@ -220,6 +230,11 @@ export function deleteThread(id: number): void {
 
 export function deleteThreadByUuid(uuid: string): void {
   const stmt = getDB().prepare("DELETE FROM threads WHERE uuid = ?");
+  stmt.run(uuid);
+}
+
+export function makeThreadPublic(uuid: string): void {
+  const stmt = getDB().prepare("UPDATE threads SET public = TRUE WHERE uuid = ?");
   stmt.run(uuid);
 }
 
