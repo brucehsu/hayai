@@ -8,12 +8,6 @@ primary_region = 'lhr'
 
 [build]
 
-[env]
-  PORT = '8080'
-
-[processes]
-  app = 'run -A ./'
-
 [http_service]
   internal_port = 8000
   force_https = true

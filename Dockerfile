@@ -23,5 +23,5 @@ COPY --from=bin /deno /bin/deno
 WORKDIR /deno-dir
 COPY . .
 
-ENTRYPOINT ["/bin/deno"]
-CMD ["task", "start"]
+EXPOSE 8000
+ENTRYPOINT ["/bin/deno", "task", "start"]
