@@ -12,14 +12,12 @@ interface MessageProps {
 export default function Message({ message }: MessageProps): JSX.Element {
   return (
     <div
-      class={`flex ${
-        message.type === "user" ? "justify-end" : "justify-start"
-      }`}
+      class={`flex justify-center`}
     >
       <div
-        class={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+        class={`w-[80%] px-4 py-2 rounded-lg ${
           message.type === "user"
-            ? "bg-blue-600 text-white"
+            ? "bg-blue-600 text-white text-right"
             : "bg-white text-gray-800 border border-gray-200"
         }`}
       >
