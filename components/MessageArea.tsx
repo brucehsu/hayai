@@ -27,7 +27,7 @@ export default function MessageArea({
             <div class="text-center text-gray-500">
               <p class="text-xl mb-4 text-red-600">{error}</p>
               <Button
-                variant="blue"
+                variant="google"
                 href="/auth/login"
                 class="inline-block px-6 py-3 rounded-lg"
               >

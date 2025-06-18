@@ -1,5 +1,71 @@
 @import url("https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css");
 
+/* Custom color system */
+.bg-primary-bg {
+  background-color: #211E55;
+}
+
+.bg-create {
+  background-color: #096148;
+}
+
+.bg-create:hover {
+  background-color: #00AA90;
+}
+
+.bg-submit {
+  background-color: #4E4F97;
+}
+
+.bg-submit:hover {
+  background-color: #8A6BBE;
+}
+
+.bg-cancel {
+  background-color: #C73E3A;
+}
+
+.bg-cancel:hover {
+  background-color: #D75455;
+}
+
+.bg-create-hover {
+  background-color: #00AA90;
+}
+
+.bg-submit-hover {
+  background-color: #8A6BBE;
+}
+
+.bg-cancel-hover {
+  background-color: #D75455;
+}
+
+/* Thread colors */
+.bg-thread-hover {
+  background-color: #268785;
+}
+
+.bg-thread-selected {
+  background-color: #0D5661;
+}
+
+.hover\:bg-thread-hover:hover {
+  background-color: #268785;
+}
+
+.focus\:ring-create:focus {
+  --tw-ring-color: #096148;
+}
+
+.focus\:ring-submit:focus {
+  --tw-ring-color: #4E4F97;
+}
+
+.focus\:ring-cancel:focus {
+  --tw-ring-color: #C73E3A;
+}
+
 /* Custom styles */
 .scrollbar-hide {
   -ms-overflow-style: none;

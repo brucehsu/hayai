@@ -1,6 +1,6 @@
 import { JSX } from "preact";
 
-type ButtonVariant = "green" | "blue" | "red" | "gray";
+type ButtonVariant = "create" | "submit" | "cancel" | "google";
 
 interface ButtonProps {
   variant: ButtonVariant;
@@ -23,7 +23,19 @@ const getButtonStyles = (
     return `${baseStyles} bg-gray-400 cursor-not-allowed text-white`;
   }
 
-  return `${baseStyles} bg-${variant}-600 hover:bg-${variant}-700 text-white focus:ring-${variant}-500`;
+  switch (variant) {
+    case "create":
+      return `${baseStyles} bg-create hover:bg-create-hover text-white focus:ring-create`;
+    case "submit":
+      return `${baseStyles} bg-submit hover:bg-submit-hover text-white focus:ring-submit`;
+    case "cancel":
+      return `${baseStyles} bg-cancel hover:bg-cancel-hover text-white focus:ring-cancel`;
+    case "google":
+      // Keep Google button styling unchanged
+      return `${baseStyles} bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500`;
+    default:
+      return `${baseStyles} bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500`;
+  }
 };
 
 export default function Button({

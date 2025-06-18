@@ -315,7 +315,7 @@ export default function ChatArea(
                       You've reached the 10 message limit for guest accounts.
                     </p>
                     <Button
-                      variant="blue"
+                      variant="google"
                       href="/auth/login"
                       class="inline-block px-6 py-3 rounded-lg"
                     >
@@ -367,7 +367,7 @@ export default function ChatArea(
                       />
                       <Button
                         type="submit"
-                        variant="blue"
+                        variant="submit"
                         disabled={isSubmitting || isGuestRateLimited ||
                           isStreaming}
                         class="px-6 py-2 rounded-lg"
@@ -388,7 +388,7 @@ export default function ChatArea(
                       You've reached the 10 message limit for guest accounts.
                     </p>
                     <Button
-                      variant="blue"
+                      variant="google"
                       href="/auth/login"
                       class="inline-block px-6 py-3 rounded-lg"
                     >
@@ -439,7 +439,7 @@ export default function ChatArea(
                       </select>
                       <Button
                         type="submit"
-                        variant="blue"
+                        variant="submit"
                         disabled={isSubmitting || isGuestRateLimited}
                         class="px-6 py-2 rounded-lg"
                       >

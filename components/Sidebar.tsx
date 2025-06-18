@@ -20,7 +20,7 @@ export default function Sidebar(
   { user, threads, currentThread }: SidebarProps,
 ): JSX.Element {
   return (
-    <div class="w-64 bg-gray-900 text-white flex flex-col">
+    <div class="w-64 bg-primary-bg text-white flex flex-col">
       {/* Header */}
       <div class="p-4 border-gray-700">
         {user && user.isLoggedIn
@@ -67,7 +67,7 @@ export default function Sidebar(
 
                 <div class="mt-4">
                   <Button
-                    variant="blue"
+                    variant="google"
                     href="/auth/login"
                     class="block text-center w-full"
                   >
@@ -82,7 +82,7 @@ export default function Sidebar(
       {/* New Chat Button */}
       <div class="p-4">
         <Button
-          variant="green"
+          variant="create"
           href="/chat/new"
           class="w-full flex items-center justify-center"
         >
@@ -118,7 +118,7 @@ export default function Sidebar(
       {user && user.isLoggedIn && (
         <div class="p-4 border-gray-700">
           <Button
-            variant="red"
+            variant="cancel"
             href="/auth/logout"
             class="block text-center w-full mt-4"
           >

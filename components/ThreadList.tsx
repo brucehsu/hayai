@@ -23,7 +23,7 @@ export default function ThreadList(
                 key={thread.id}
                 href={`/chat/${thread.uuid}`}
                 class={`block p-3 mb-2 rounded-md transition-colors ${
-                  isSelected ? "bg-blue-600 text-white" : "hover:bg-gray-800"
+                  isSelected ? "bg-thread-selected text-white" : "hover:bg-thread-hover"
                 }`}
               >
                 <div class="font-medium text-sm truncate">
@@ -31,7 +31,7 @@ export default function ThreadList(
                 </div>
                 <div
                   class={`text-xs mt-1 ${
-                    isSelected ? "text-blue-100" : "text-gray-400"
+                    isSelected ? "text-gray-200" : "text-gray-400"
                   }`}
                 >
                   {new Date(thread.updated_at).toLocaleDateString()}
