@@ -22,7 +22,7 @@ export default function Sidebar(
   return (
     <div class="w-64 bg-gray-900 text-white flex flex-col">
       {/* Header */}
-      <div class="p-4 border-b border-gray-700">
+      <div class="p-4 border-gray-700">
         {user && user.isLoggedIn
           ? (
             <div class="mt-2 text-sm text-gray-300">
@@ -116,7 +116,7 @@ export default function Sidebar(
       {/* User Menu */}
 
       {user && user.isLoggedIn && (
-        <div class="p-4 border-t border-gray-700">
+        <div class="p-4 border-gray-700">
           <Button
             variant="red"
             href="/auth/logout"
