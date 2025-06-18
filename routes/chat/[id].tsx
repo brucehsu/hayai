@@ -138,6 +138,8 @@ export const handler: Handlers<PageData> = {
     
     const formData = await req.formData();
     const message = formData.get("message") as string;
+    const aiResponse = formData.get("ai_response") as string;
+    const isStreamed = formData.get("is_streamed") === "true";
     const provider = formData.get("provider") as string || currentThread.llm_provider;
     
     if (!message?.trim()) {
@@ -178,26 +180,35 @@ export const handler: Handlers<PageData> = {
     };
     messages.push(userMessage);
     
-    // Get AI response
-    let aiContent = `I'm ${aiManager.getProviderDisplayName(provider as any)}. Thanks for continuing our conversation!`;
+    // Handle AI response - either from streaming or generate new one
+    let aiContent: string;
     let modelUsed = provider;
     
-    try {
-      if (aiManager.isProviderAvailable(provider as any)) {
-        // Convert message history to AI client format
-        const aiMessages: AIMessage[] = messages.map((msg: any) => ({
-          role: msg.type === "user" ? "user" : "assistant",
-          content: msg.content,
-          timestamp: msg.timestamp
-        }));
-        
-        const aiResponse = await aiManager.chat(aiMessages, provider as any);
-        aiContent = aiResponse.content;
-        modelUsed = aiResponse.model;
+    if (isStreamed && aiResponse) {
+      // Use the streamed AI response
+      aiContent = aiResponse;
+      modelUsed = provider;
+    } else {
+      // Generate AI response normally (fallback for non-streaming)
+      aiContent = `I'm ${aiManager.getProviderDisplayName(provider as any)}. Thanks for continuing our conversation!`;
+      
+      try {
+        if (aiManager.isProviderAvailable(provider as any)) {
+          // Convert message history to AI client format
+          const aiMessages: AIMessage[] = messages.map((msg: any) => ({
+            role: msg.type === "user" ? "user" : "assistant",
+            content: msg.content,
+            timestamp: msg.timestamp
+          }));
+          
+          const aiResponse = await aiManager.chat(aiMessages, provider as any);
+          aiContent = aiResponse.content;
+          modelUsed = aiResponse.model;
+        }
+      } catch (error) {
+        console.error("AI API Error:", error);
+        aiContent = `Sorry, I encountered an error with ${provider}. ${error.message || "Please try again later."}`;
       }
-    } catch (error) {
-      console.error("AI API Error:", error);
-      aiContent = `Sorry, I encountered an error with ${provider}. ${error.message || "Please try again later."}`;
     }
     
     const aiMessage = {

@@ -1,4 +1,4 @@
-import { AIClient, AIProvider, AIClientConfig, AIMessage, AIResponse, ChatOptions } from "./types.ts";
+import { AIClient, AIProvider, AIClientConfig, AIMessage, AIResponse, AIStreamResponse, ChatOptions } from "./types.ts";
 import { OpenAIClient } from "./openai-client.ts";
 import { GeminiClient } from "./gemini-client.ts";
 
@@ -89,6 +89,28 @@ export class AIManager {
     }
     
     return await client.chat(messages, options);
+  }
+  
+  /**
+   * Send a streaming chat request using the specified or default provider
+   */
+  async *chatStream(
+    messages: AIMessage[], 
+    provider?: AIProvider, 
+    options?: ChatOptions
+  ): AsyncIterable<AIStreamResponse> {
+    const targetProvider = provider || this.defaultProvider;
+    const client = this.getClient(targetProvider);
+    
+    if (!client) {
+      throw new Error(`AI provider ${targetProvider} is not available`);
+    }
+    
+    if (!client.isConfigured()) {
+      throw new Error(`AI provider ${targetProvider} is not properly configured`);
+    }
+    
+    yield* client.chatStream(messages, options);
   }
   
   /**

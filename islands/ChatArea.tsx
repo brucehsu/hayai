@@ -1,5 +1,5 @@
 import { JSX } from "preact";
-import { useState } from "preact/hooks";
+import { useState, useRef } from "preact/hooks";
 import Message from "../components/Message.tsx";
 
 interface ChatAreaProps {
@@ -19,12 +19,117 @@ interface ChatAreaProps {
 export default function ChatArea({ currentThread, error, user }: ChatAreaProps): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
+  const [streamingMessage, setStreamingMessage] = useState<string>("");
+  const [isStreaming, setIsStreaming] = useState(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
   
   const baseMessages = currentThread ? JSON.parse(currentThread.messages || "[]") : [];
   const allMessages = [...baseMessages, ...optimisticMessages];
   
   // Check if guest user is rate limited
   const isGuestRateLimited = Boolean(user && !user.isLoggedIn && user.isRateLimited);
+
+  const handleStreamingResponse = async (message: string, threadId?: string) => {
+    try {
+      setIsStreaming(true);
+      setStreamingMessage("");
+
+      // Prepare the messages for AI
+      const messages = [...baseMessages, { type: "user", content: message, timestamp: new Date().toISOString() }];
+      const aiMessages = messages.map((msg: any) => ({
+        role: msg.type === "user" ? "user" : "assistant",
+        content: msg.content,
+        timestamp: msg.timestamp
+      }));
+
+      // Call streaming API
+      const response = await fetch('/api/chat?stream=true', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messages: aiMessages,
+          provider: 'openai', // Use OpenAI for more reliable streaming
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to start streaming response');
+      }
+
+      if (!response.body) {
+        throw new Error('No response body');
+      }
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let fullContent = "";
+
+      try {
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          const lines = chunk.split('\n');
+
+          for (const line of lines) {
+            if (line.startsWith('data: ')) {
+              try {
+                const data = JSON.parse(line.slice(6));
+                
+                if (data.type === 'chunk' && data.data?.delta?.content) {
+                  fullContent += data.data.delta.content;
+                  setStreamingMessage(fullContent);
+                } else if (data.type === 'complete') {
+                  // Streaming complete, save to database
+                  if (threadId) {
+                    await saveStreamedMessage(threadId, message, fullContent);
+                  }
+                  setTimeout(() => {
+                    window.location.reload();
+                  }, 100);
+                  return;
+                } else if (data.type === 'error') {
+                  throw new Error(data.error);
+                }
+              } catch (parseError) {
+                console.warn('Failed to parse streaming data:', parseError);
+              }
+            }
+          }
+        }
+      } finally {
+        reader.releaseLock();
+      }
+
+    } catch (error) {
+      console.error('Streaming error:', error);
+      setOptimisticMessages(prev => prev.slice(0, -1)); // Remove optimistic user message
+    } finally {
+      setIsStreaming(false);
+      setStreamingMessage("");
+    }
+  };
+
+  const saveStreamedMessage = async (threadId: string, userMessage: string, aiResponse: string) => {
+    try {
+      await fetch(`/chat/${threadId}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: new URLSearchParams({
+          message: userMessage,
+          ai_response: aiResponse,
+          is_streamed: 'true'
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to save streamed message:', error);
+    }
+  };
 
   const handleExistingThreadSubmit = (e: Event) => {
     e.preventDefault();
@@ -49,20 +154,11 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     const messageInput = form.querySelector('input[name="message"]') as HTMLInputElement;
     messageInput.value = '';
     
-    // Submit the form
-    fetch(window.location.href, {
-      method: 'POST',
-      body: formData
-    }).then(() => {
-      // Reset optimistic messages and reload the page to get the AI response
-      setOptimisticMessages([]);
-      setIsSubmitting(false);
-      window.location.reload();
-    }).catch(() => {
-      setIsSubmitting(false);
-      // Remove the optimistic message on error
-      setOptimisticMessages(prev => prev.slice(0, -1));
-    });
+    // Use streaming response
+    handleStreamingResponse(message.trim(), currentThread?.uuid)
+      .finally(() => {
+        setIsSubmitting(false);
+      });
   };
 
   const handleNewChatSubmit = (e: Event) => {
@@ -143,7 +239,7 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
               </a>
             </div>
           </div>
-        ) : allMessages.length === 0 ? (
+        ) : allMessages.length === 0 && !isStreaming ? (
           <div class="flex items-center justify-center h-full">
             <div class="text-center text-gray-500">
               <p>No messages yet. Start the conversation!</p>
@@ -154,11 +250,15 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
             {allMessages.map((message: any, index: number) => (
               <Message key={index} message={message} />
             ))}
-            {isSubmitting && currentThread && (
+            {(isSubmitting || isStreaming) && currentThread && (
               <div class="flex justify-start">
                 <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-white text-gray-800 border border-gray-200">
                   <p class="text-xs text-gray-500 mb-1 font-medium">AI</p>
-                  <p class="text-sm text-gray-500">Thinking...</p>
+                  {isStreaming && streamingMessage ? (
+                    <div class="text-sm whitespace-pre-wrap">{streamingMessage}<span class="animate-pulse">|</span></div>
+                  ) : (
+                    <p class="text-sm text-gray-500">Thinking...</p>
+                  )}
                 </div>
               </div>
             )}
@@ -193,17 +293,17 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
                 <form onSubmit={handleExistingThreadSubmit} class="flex gap-2">
                   <input
                     type="text"
-                    placeholder={isSubmitting ? "Sending..." : "Type your message..."}
+                    placeholder={isSubmitting || isStreaming ? "Processing..." : "Type your message..."}
                     class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
                     name="message"
                     required
-                    disabled={isSubmitting || isGuestRateLimited}
+                    disabled={isSubmitting || isGuestRateLimited || isStreaming}
                   />
                   <input type="hidden" name="provider" value={currentThread.llm_provider} />
                   <button
                     type="submit"
                     class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={isSubmitting || isGuestRateLimited}
+                    disabled={isSubmitting || isGuestRateLimited || isStreaming}
                   >
                     {isSubmitting ? "Sending..." : "Send"}
                   </button>

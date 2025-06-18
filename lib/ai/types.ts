@@ -23,6 +23,21 @@ export interface AIClientConfig {
   baseUrl?: string;
 }
 
+export interface AIStreamResponse {
+  id: string;
+  model: string;
+  delta: {
+    content?: string;
+    role?: string;
+  };
+  finish_reason?: string | null;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+}
+
 export interface AIClient {
   /**
    * The provider name (e.g., 'openai', 'gemini')
@@ -38,6 +53,11 @@ export interface AIClient {
    * Send a chat completion request
    */
   chat(messages: AIMessage[], options?: ChatOptions): Promise<AIResponse>;
+  
+  /**
+   * Send a streaming chat completion request
+   */
+  chatStream(messages: AIMessage[], options?: ChatOptions): AsyncIterable<AIStreamResponse>;
   
   /**
    * Check if the client is properly configured
