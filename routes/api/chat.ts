@@ -17,7 +17,7 @@ export const handler = {
     }
 
     try {
-      const { messages, provider, model, temperature, maxTokens } = await req
+      const { messages, provider, model } = await req
         .json();
 
       if (!messages || !Array.isArray(messages)) {
@@ -54,8 +54,6 @@ export const handler = {
         targetProvider,
         {
           model,
-          temperature,
-          maxTokens,
         },
       );
 
@@ -129,7 +127,7 @@ export const handler = {
 
 async function handleStreamingRequest(req: Request): Promise<Response> {
   try {
-    const { messages, provider, model, temperature, maxTokens } = await req
+    const { messages, provider, model } = await req
       .json();
 
     if (!messages || !Array.isArray(messages)) {
@@ -171,8 +169,6 @@ async function handleStreamingRequest(req: Request): Promise<Response> {
             targetProvider,
             {
               model,
-              temperature,
-              maxTokens,
             },
           );
 
@@ -257,8 +253,6 @@ async function handleTitleUpdateRequest(req: Request): Promise<Response> {
           "gemini",
           {
             model: "gemini-2.5-flash-lite-preview-06-17",
-            temperature: 0.3,
-            maxTokens: 50,
           },
         );
         title = titleResponse.content.trim();

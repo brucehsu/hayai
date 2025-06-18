@@ -37,8 +37,8 @@ export class GeminiClient implements AIClient {
     }
 
     const model = options?.model || this.config.model || this.defaultModel;
-    const temperature = options?.temperature || this.config.temperature || 0.7;
-    const maxTokens = options?.maxTokens || this.config.maxTokens || 1000;
+    const temperature = this.config.temperature || 0.7;
+    const maxTokens = this.config.maxTokens || 1000;
 
     try {
       // Convert messages to Gemini format
@@ -131,8 +131,8 @@ export class GeminiClient implements AIClient {
     }
 
     const model = options?.model || this.config.model || this.defaultModel;
-    const temperature = options?.temperature || this.config.temperature || 0.7;
-    const maxTokens = options?.maxTokens || this.config.maxTokens || 1000;
+    const temperature = this.config.temperature || 0.7;
+    const maxTokens = this.config.maxTokens || 1000;
 
     try {
       const contents = this.convertMessagesToGeminiFormat(messages);

@@ -70,8 +70,6 @@ export interface AIClient {
 
 export interface ChatOptions {
   model?: string;
-  temperature?: number;
-  maxTokens?: number;
   stream?: boolean;
 }
 

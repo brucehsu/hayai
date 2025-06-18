@@ -37,8 +37,8 @@ export class OpenAIClient implements AIClient {
     }
 
     const model = options?.model || this.config.model || this.defaultModel;
-    const temperature = options?.temperature || this.config.temperature || 0.7;
-    const maxTokens = options?.maxTokens || this.config.maxTokens || 1000;
+    const temperature = this.config.temperature || 0.7;
+    const maxTokens = this.config.maxTokens || 1000;
 
     try {
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
@@ -107,8 +107,8 @@ export class OpenAIClient implements AIClient {
     }
 
     const model = options?.model || this.config.model || this.defaultModel;
-    const temperature = options?.temperature || this.config.temperature || 0.7;
-    const maxTokens = options?.maxTokens || this.config.maxTokens || 1000;
+    const temperature = this.config.temperature || 0.7;
+    const maxTokens = this.config.maxTokens || 1000;
 
     try {
       const response = await fetch(`${this.config.baseUrl}/chat/completions`, {
