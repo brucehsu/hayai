@@ -11,7 +11,7 @@ import * as $chat_id_ from "./routes/chat/[id].tsx";
 import * as $chat_new from "./routes/chat/new.tsx";
 import * as $index from "./routes/index.tsx";
 import * as $ChatArea from "./islands/ChatArea.tsx";
-import { type Manifest } from "$fresh/server.ts";
+import type { Manifest } from "$fresh/server.ts";
 
 const manifest = {
   routes: {
