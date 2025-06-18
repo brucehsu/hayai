@@ -34,7 +34,7 @@ export default function ChatHeader(
         if (button) {
           const tooltip = document.createElement('div');
           tooltip.textContent = 'URL copied to clipboard!';
-          tooltip.className = 'absolute bg-black text-white px-2 py-1 rounded text-xs -top-8 left-1/2 transform -translate-x-1/2 z-10';
+          tooltip.className = 'absolute bg-black text-white px-2 py-1 rounded text-xs top-full mt-2 left-1/2 transform -translate-x-1/2 z-10';
           button.style.position = 'relative';
           button.appendChild(tooltip);
           
