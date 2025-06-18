@@ -39,7 +39,7 @@ export default function MessageArea({
             <p class="mb-6">Start a new conversation or select an existing chat from the sidebar</p>
             <a 
               href="/chat/new" 
-              class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
+              class="inline-block bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg transition-colors"
             >
               Start New Chat
             </a>
