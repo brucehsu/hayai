@@ -1,8 +1,8 @@
 # hayai
 
-A full-stack AI chat web application built with Deno Fresh, featuring multiple
-AI model support through a universal client interface, user authentication, and
-persistent chat threads.
+A full-stack AI chat web application built with Deno Fresh, featuring multiple AI model support through a universal client interface, user authentication, and persistent chat threads.
+
+**Hayai** (速い) comes from Japanese meaning "fast" or "quick" - reflecting our goal to provide an easy and fast chat UI for multiple LLMs. The name also cheekily includes "ai" as a suffix, emphasizing the AI-focused nature of the application.
 
 <a id="made-by" target="_blank" href="https://bruceh.su" style="float:right;">
     <img src="https://bruceh.su/assets/images/made-by.svg">
