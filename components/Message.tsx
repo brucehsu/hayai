@@ -23,11 +23,6 @@ export default function Message({ message }: MessageProps): JSX.Element {
             : "bg-white text-gray-800 border border-gray-200"
         }`}
       >
-        {message.type !== "user" && (
-          <p class="text-xs text-gray-500 mb-1 font-medium">
-            {message.type}
-          </p>
-        )}
         <div 
           class="text-sm markdown-content"
           dangerouslySetInnerHTML={{ __html: marked(message.content) }}

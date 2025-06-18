@@ -70,7 +70,6 @@ export default function MessageArea({
             {(isSubmitting || isStreaming) && currentThread && (
               <div class="flex justify-start">
                 <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-white text-gray-800 border border-gray-200">
-                  <p class="text-xs text-gray-500 mb-1 font-medium">AI</p>
                   {isStreaming && streamingMessage
                     ? (
                       <div class="text-sm whitespace-pre-wrap">
