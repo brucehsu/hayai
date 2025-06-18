@@ -1,10 +1,11 @@
 import { JSX } from "preact";
 import { marked } from "marked";
+import Spinner from "./Spinner.tsx";
 
 interface MessageProps {
   message: {
     type: string;
-    content: string;
+    content: string | null;
     timestamp?: string;
   };
 }
@@ -21,10 +22,18 @@ export default function Message({ message }: MessageProps): JSX.Element {
             : "bg-white text-gray-800 border border-gray-200"
         }`}
       >
-        <div
-          class="text-sm markdown-content"
-          dangerouslySetInnerHTML={{ __html: marked(message.content) }}
-        />
+        {message.content === null
+          ? (
+            <div class="flex justify-center p-4">
+              <Spinner />
+            </div>
+          )
+          : (
+            <div
+              class="text-sm markdown-content"
+              dangerouslySetInnerHTML={{ __html: marked(message.content) }}
+            />
+          )}
         {message.timestamp && (
           <p class="text-xs mt-1 opacity-70 text-right">
             {new Date(message.timestamp).toLocaleTimeString()}

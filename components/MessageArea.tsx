@@ -42,7 +42,7 @@ export default function MessageArea({
 
     const streamingContent = isStreaming && streamingMessage
       ? `${streamingMessage}<span class="animate-pulse">|</span>`
-      : "Thinking...";
+      : null;
 
     return (
       <Message
