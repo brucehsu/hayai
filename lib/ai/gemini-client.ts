@@ -60,11 +60,8 @@ export class GeminiClient implements AIClient {
       }
       
       const data = await response.json();
-
-      console.log(model);
       
       if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        console.log(JSON.stringify(data, null, 2));
         throw new GeminiAIError("Invalid response format from Gemini", this.provider);
       }
       
