@@ -4,7 +4,10 @@ A full-stack AI chat web application built with Deno Fresh, featuring multiple
 AI model support through a universal client interface, user authentication, and
 persistent chat threads.
 
-<a href="https://www.buymeacoffee.com/brucehsu" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 50px; width: 180px;"></a>
+<a id="made-by" target="_blank" href="https://bruceh.su" style="float:right;">
+    <img src="https://bruceh.su/assets/images/made-by.svg">
+</a>
+<a href="https://www.buymeacoffee.com/brucehsu" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/v2/default-violet.png" alt="Buy Me A Coffee" style="height: 30px; width: 108px;"></a>
 
 ## Features
 

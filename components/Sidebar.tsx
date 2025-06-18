@@ -126,6 +126,9 @@ export default function Sidebar(
           </Button>
         </div>
       )}
+      <a id="made-by" target="_blank" href="https://bruceh.su">
+        <img src="https://bruceh.su/assets/images/made-by.svg"  class="rounded-tr-2xl"></img>
+      </a>
     </div>
   );
 }
