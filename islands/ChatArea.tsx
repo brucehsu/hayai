@@ -4,6 +4,7 @@ import Message from "../components/Message.tsx";
 import ChatHeader from "../components/ChatHeader.tsx";
 import MessageArea from "../components/MessageArea.tsx";
 import Button from "../components/Button.tsx";
+import MessageInput from "../components/MessageInput.tsx";
 
 interface ChatAreaProps {
   currentThread: any;
@@ -346,38 +347,18 @@ export default function ChatArea(
                         </p>
                       </div>
                     )}
-                    <form
+                    <MessageInput
                       onSubmit={handleExistingThreadSubmit}
-                      class="flex gap-2"
-                    >
-                      <input
-                        type="text"
-                        placeholder={isSubmitting || isStreaming
-                          ? "Processing..."
-                          : !isOwner
-                          ? "You can only view this shared thread"
-                          : "Type your message..."}
-                        class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        name="message"
-                        required
-                        disabled={isSubmitting || isGuestRateLimited ||
-                          isStreaming || !isOwner}
-                      />
-                      <input
-                        type="hidden"
-                        name="provider"
-                        value={currentThread.llm_provider}
-                      />
-                      <Button
-                        type="submit"
-                        variant="submit"
-                        disabled={isSubmitting || isGuestRateLimited ||
-                          isStreaming || !isOwner}
-                        class="px-6 py-2 rounded-lg"
-                      >
-                        {isSubmitting ? "Sending..." : "Send"}
-                      </Button>
-                    </form>
+                      placeholder={isSubmitting || isStreaming
+                        ? "Processing..."
+                        : !isOwner
+                        ? "You can only view this shared thread"
+                        : "Type your message..."}
+                      disabled={isSubmitting || isGuestRateLimited ||
+                        isStreaming || !isOwner}
+                      isSubmitting={isSubmitting}
+                      providerValue={currentThread.llm_provider}
+                    />
                   </>
                 )}
             </div>
@@ -421,34 +402,15 @@ export default function ChatArea(
                         </p>
                       </div>
                     )}
-                    <form onSubmit={handleNewChatSubmit} class="flex gap-2">
-                      <input
-                        type="text"
-                        placeholder={isSubmitting
-                          ? "Starting chat..."
-                          : "Start a new conversation..."}
-                        class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        name="message"
-                        required
-                        disabled={isSubmitting || isGuestRateLimited}
-                      />
-                      <select
-                        name="provider"
-                        class="border border-gray-300 rounded px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                        disabled={isSubmitting || isGuestRateLimited}
-                      >
-                        <option value="openai">OpenAI GPT-4o</option>
-                        <option value="gemini">Google Gemini 2.5 Flash</option>
-                      </select>
-                      <Button
-                        type="submit"
-                        variant="submit"
-                        disabled={isSubmitting || isGuestRateLimited}
-                        class="px-6 py-2 rounded-lg"
-                      >
-                        {isSubmitting ? "Starting..." : "Start Chat"}
-                      </Button>
-                    </form>
+                    <MessageInput
+                      onSubmit={handleNewChatSubmit}
+                      placeholder={isSubmitting
+                        ? "Starting chat..."
+                        : "Start a new conversation..."}
+                      disabled={isSubmitting || isGuestRateLimited}
+                      isSubmitting={isSubmitting}
+                      showProviderSelect={true}
+                    />
                   </>
                 )}
             </div>
