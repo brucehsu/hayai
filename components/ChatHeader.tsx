@@ -28,7 +28,6 @@ export default function ChatHeader(
               disabled={true}
             >
               <option value="openai">OpenAI GPT-4o</option>
-              <option value="anthropic">Anthropic Claude</option>
               <option value="gemini">Google Gemini 2.5 Flash</option>
             </select>
             <input type="hidden" name="message" value="" />

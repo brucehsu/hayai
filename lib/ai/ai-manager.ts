@@ -30,12 +30,6 @@ export class AIManager {
     if (geminiKey) {
       this.clients.set("gemini", new GeminiClient({ apiKey: geminiKey }));
     }
-
-    // Initialize Anthropic client (placeholder for future implementation)
-    const anthropicKey = globalThis.Deno?.env.get("ANTHROPIC_API_KEY");
-    if (anthropicKey) {
-      // this.clients.set("anthropic", new AnthropicClient({ apiKey: anthropicKey }));
-    }
   }
 
   /**
@@ -135,8 +129,6 @@ export class AIManager {
         return "OpenAI GPT-4o";
       case "gemini":
         return "Google Gemini 2.5 Flash";
-      case "anthropic":
-        return "Anthropic Claude";
       default:
         return provider;
     }
@@ -156,8 +148,6 @@ export class AIManager {
           "gemini-1.5-pro",
           "gemini-pro",
         ];
-      case "anthropic":
-        return ["claude-3-sonnet", "claude-3-haiku"];
       default:
         return [];
     }
@@ -179,9 +169,6 @@ export function normalizeProvider(provider: string): AIProvider {
     case "gemini":
     case "google":
       return "gemini";
-    case "anthropic":
-    case "claude":
-      return "anthropic";
     default:
       return "openai"; // fallback
   }

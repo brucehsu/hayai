@@ -6,8 +6,8 @@ persistent chat threads.
 
 ## Features
 
-- 🤖 **Universal AI Interface**: Unified API supporting OpenAI GPT-4o, Google
-  Gemini 2.5 Flash, and Anthropic Claude (planned)
+- 🤖 **Universal AI Interface**: Unified API supporting OpenAI GPT-4o, and Google
+  Gemini 2.5 Flash.
 - 👤 **Google OAuth Authentication**: Secure login with Google accounts
 - 💬 **Persistent Chat Threads**: Organize conversations with UUID-based routing
 - 🎨 **Modern UI**: Clean, responsive design with Tailwind CSS and Islands
@@ -86,7 +86,7 @@ persistent chat threads.
 - `user_id`: Foreign key to users table
 - `title`: Auto-generated chat thread title
 - `messages`: JSON array of message objects
-- `llm_provider`: Selected AI provider ('openai', 'gemini', 'anthropic')
+- `llm_provider`: Selected AI provider ('openai', 'gemini')
 - `created_at`, `updated_at`: Auto-managed timestamps with triggers
 
 ### Message Format (in JSON)
@@ -129,12 +129,6 @@ The application features a sophisticated AI client system that provides:
 - **Configuration**: Requires `GEMINI_API_KEY`
 - **Note**: System messages converted to user messages with "System:" prefix
 
-#### Anthropic Claude (Interface Ready)
-
-- **Status**: Client interface implemented, API integration pending
-- **Planned Models**: Claude-3-sonnet, Claude-3-haiku
-- **Configuration**: Will require `ANTHROPIC_API_KEY`
-
 ## Setup Instructions
 
 ### 1. Prerequisites
@@ -165,7 +159,6 @@ DATABASE_PATH=./database.db
 
 # AI API Keys (Optional - app works without them)
 OPENAI_API_KEY=your_openai_api_key
-ANTHROPIC_API_KEY=your_anthropic_api_key
 GEMINI_API_KEY=your_gemini_api_key
 
 # Session Secret (Required)
@@ -224,7 +217,7 @@ const response = await fetch("/api/chat", {
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     messages: [{ role: "user", content: "Hello!" }],
-    provider: "openai", // optional: 'openai', 'gemini', 'anthropic'
+    provider: "openai", // optional: 'openai', 'gemini'
     model: "gpt-4o-2024-08-06", // optional, uses provider default
     temperature: 0.7, // optional
     maxTokens: 1000, // optional
@@ -355,5 +348,4 @@ The project follows standard Deno and Fresh conventions:
 
 ## License
 
-MIT License - feel free to use this project as a starting point for your own AI
-chat applications.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
