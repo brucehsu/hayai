@@ -27,55 +27,30 @@ export default function MessageArea({
     if (scrollContainerRef.current) {
       scrollContainerRef.current.scrollTo({
         top: scrollContainerRef.current.scrollHeight,
-        behavior: 'smooth'
+        behavior: "smooth",
       });
     }
   }, [allMessages.length, streamingMessage, isStreaming, isSubmitting]);
 
   return (
-    <div 
+    <div
       ref={scrollContainerRef}
       class="flex-1 overflow-y-auto p-4 bg-gray-50"
     >
       {error
-        ? (
-          <div class="flex items-center justify-center h-full">
-            <div class="text-center text-gray-500">
-              <p class="text-xl mb-4 text-red-600">{error}</p>
-              <Button
-                variant="google"
-                href="/auth/login"
-                class="inline-block px-6 py-3 rounded-lg"
-              >
-                Sign In with Google
-              </Button>
-            </div>
-          </div>
-        )
+        ? <ErrorState error={error} />
         : !currentThread
-        ? (
-          <div class="flex items-center justify-center h-full">
-            <div class="text-center text-gray-500">
-              <div class="flex justify-center mb-6">
-                <img 
-                  src="/logo.png" 
-                  alt="hayai Logo" 
-                  class="h-16 w-auto"
-                />
-              </div>
-            </div>
-          </div>
-        )
+        ? <EmptyState />
         : allMessages.length === 0 && !isStreaming
         ? (
           <div class="flex items-center justify-center h-full">
             <div class="flex justify-center mb-6">
-                <img 
-                  src="/logo.png" 
-                  alt="hayai Logo" 
-                  class="h-16 w-auto"
-                />
-              </div>
+              <img
+                src="/logo.png"
+                alt="hayai Logo"
+                class="h-16 w-auto"
+              />
+            </div>
           </div>
         )
         : (
@@ -96,6 +71,32 @@ export default function MessageArea({
             )}
           </div>
         )}
+    </div>
+  );
+}
+
+function EmptyState(): JSX.Element {
+  return (
+    <div class="flex items-center justify-center h-full">
+      <div class="text-center text-gray-500">
+        <div class="flex justify-center mb-6">
+          <img
+            src="/logo.png"
+            alt="hayai Logo"
+            class="h-16 w-auto"
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ErrorState({ error }: { error: string }): JSX.Element {
+  return (
+    <div class="flex items-center justify-center h-full">
+      <div class="text-center text-gray-500">
+        <p class="text-xl mb-4 text-red-600">{error}</p>
+      </div>
     </div>
   );
 }
