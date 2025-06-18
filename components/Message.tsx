@@ -1,4 +1,5 @@
 import { JSX } from "preact";
+import { marked } from "marked";
 
 interface MessageProps {
   message: {
@@ -27,7 +28,10 @@ export default function Message({ message }: MessageProps): JSX.Element {
             {message.type}
           </p>
         )}
-        <p class="text-sm whitespace-pre-wrap">{message.content}</p>
+        <div 
+          class="text-sm markdown-content"
+          dangerouslySetInnerHTML={{ __html: marked(message.content) }}
+        />
         <p class="text-xs mt-1 opacity-70 text-right">
           {new Date(message.timestamp).toLocaleTimeString()}
         </p>

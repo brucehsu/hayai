@@ -23,3 +23,80 @@
     opacity: 0.5;
   }
 }
+
+/* Markdown content styles */
+.markdown-content h1 {
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content h2 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content h3 {
+  font-size: 1.125rem;
+  font-weight: 600;
+  margin-top: 1rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content p {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content ul, .markdown-content ol {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  padding-left: 1.5rem;
+}
+
+.markdown-content li {
+  margin-top: 0.25rem;
+  margin-bottom: 0.25rem;
+}
+
+.markdown-content code {
+  background-color: rgb(243, 244, 246);
+  padding: 0.125rem 0.25rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  font-family: 'Courier New', monospace;
+}
+
+.markdown-content pre {
+  background-color: rgb(243, 244, 246);
+  padding: 1rem;
+  border-radius: 0.5rem;
+  overflow-x: auto;
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content pre code {
+  background-color: transparent;
+  padding: 0;
+}
+
+.markdown-content blockquote {
+  border-left: 4px solid rgb(209, 213, 219);
+  padding-left: 1rem;
+  font-style: italic;
+  color: rgb(107, 114, 128);
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.markdown-content strong {
+  font-weight: 600;
+}
+
+.markdown-content em {
+  font-style: italic;
+}
