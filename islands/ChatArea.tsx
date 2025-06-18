@@ -249,7 +249,7 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
                   >
                     <option value="openai">OpenAI GPT-4o</option>
                     <option value="anthropic">Anthropic Claude</option>
-                    <option value="gemini">Google Gemini 2.5 Flash</option>
+                    <option value="gemini" selected>Google Gemini 2.5 Flash</option>
                   </select>
                   <button
                     type="submit"
