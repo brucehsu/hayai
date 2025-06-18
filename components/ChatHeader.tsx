@@ -30,6 +30,11 @@ export default function ChatHeader(
               <option value="openai">OpenAI GPT-4o</option>
               <option value="gemini">Google Gemini 2.5 Flash</option>
             </select>
+            <img 
+              src="/logo.png" 
+              alt="Hayai Logo" 
+              class="h-8 w-auto mr-2"
+            />
             <input type="hidden" name="message" value="" />
           </form>
         )}

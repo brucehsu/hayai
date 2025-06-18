@@ -23,7 +23,6 @@ export default function Sidebar(
     <div class="w-64 bg-gray-900 text-white flex flex-col">
       {/* Header */}
       <div class="p-4 border-b border-gray-700">
-        <h1 class="text-xl font-bold">Hayai</h1>
         {user && user.isLoggedIn
           ? (
             <div class="mt-2 text-sm text-gray-300">

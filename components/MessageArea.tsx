@@ -40,7 +40,13 @@ export default function MessageArea({
         ? (
           <div class="flex items-center justify-center h-full">
             <div class="text-center text-gray-500">
-              <p class="text-xl mb-4">Welcome to Hayai</p>
+              <div class="flex justify-center mb-6">
+                <img 
+                  src="/logo.png" 
+                  alt="Hayai Logo" 
+                  class="h-16 w-auto"
+                />
+              </div>
               <p class="mb-6">
                 Start a new conversation or select an existing chat from the
                 sidebar
