@@ -1,8 +1,9 @@
 import { JSX } from "preact";
-import { useState, useRef, useEffect } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 import Message from "../components/Message.tsx";
 import ChatHeader from "../components/ChatHeader.tsx";
 import MessageArea from "../components/MessageArea.tsx";
+import Button from "../components/Button.tsx";
 
 interface ChatAreaProps {
   currentThread: any;
@@ -18,22 +19,30 @@ interface ChatAreaProps {
   } | null;
 }
 
-export default function ChatArea({ currentThread, error, user }: ChatAreaProps): JSX.Element {
+export default function ChatArea(
+  { currentThread, error, user }: ChatAreaProps,
+): JSX.Element {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
   const [streamingMessage, setStreamingMessage] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState(false);
-  const [threadTitle, setThreadTitle] = useState<string>(currentThread?.title || "New Conversation");
+  const [threadTitle, setThreadTitle] = useState<string>(
+    currentThread?.title || "New Conversation",
+  );
   const eventSourceRef = useRef<EventSource | null>(null);
-  
-  const baseMessages = currentThread ? JSON.parse(currentThread.messages || "[]") : [];
+
+  const baseMessages = currentThread
+    ? JSON.parse(currentThread.messages || "[]")
+    : [];
   const allMessages = [...baseMessages, ...optimisticMessages];
-  
+
   // Check if this is a new empty thread
   const isNewEmptyThread = currentThread && baseMessages.length === 0;
-  
+
   // Check if guest user is rate limited
-  const isGuestRateLimited = Boolean(user && !user.isLoggedIn && user.isRateLimited);
+  const isGuestRateLimited = Boolean(
+    user && !user.isLoggedIn && user.isRateLimited,
+  );
 
   // Update title state when currentThread changes
   useEffect(() => {
@@ -46,25 +55,29 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
   useEffect(() => {
     if (isNewEmptyThread && !isSubmitting && !isStreaming) {
       const urlParams = new URLSearchParams(window.location.search);
-      const message = urlParams.get('message');
-      
+      const message = urlParams.get("message");
+
       if (message && message.trim()) {
         // Clear the URL parameter
         const newUrl = window.location.pathname;
-        window.history.replaceState(null, '', newUrl);
-        
+        window.history.replaceState(null, "", newUrl);
+
         // Add user message optimistically
         const userMessage = {
           type: "user",
           content: message.trim(),
-          timestamp: new Date().toISOString()
+          timestamp: new Date().toISOString(),
         };
-        
+
         setOptimisticMessages([userMessage]);
         setIsSubmitting(true);
-        
+
         // Use streaming response
-        handleStreamingResponse(message.trim(), currentThread.uuid, currentThread.llm_provider)
+        handleStreamingResponse(
+          message.trim(),
+          currentThread.uuid,
+          currentThread.llm_provider,
+        )
           .finally(() => {
             setIsSubmitting(false);
           });
@@ -72,17 +85,25 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     }
   }, [isNewEmptyThread, currentThread, isSubmitting, isStreaming]);
 
-  const handleStreamingResponse = async (message: string, threadId?: string, provider?: string) => {
+  const handleStreamingResponse = async (
+    message: string,
+    threadId?: string,
+    provider?: string,
+  ) => {
     try {
       setIsStreaming(true);
       setStreamingMessage("");
 
       // Prepare the messages for AI
-      const messages = [...baseMessages, { type: "user", content: message, timestamp: new Date().toISOString() }];
+      const messages = [...baseMessages, {
+        type: "user",
+        content: message,
+        timestamp: new Date().toISOString(),
+      }];
       const aiMessages = messages.map((msg: any) => ({
         role: msg.type === "user" ? "user" : "assistant",
         content: msg.content,
-        timestamp: msg.timestamp
+        timestamp: msg.timestamp,
       }));
 
       // For new threads with empty messages, also trigger title update
@@ -93,23 +114,23 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
       }
 
       // Call streaming API
-      const response = await fetch('/api/chat?stream=true', {
-        method: 'POST',
+      const response = await fetch("/api/chat?stream=true", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           messages: aiMessages,
-          provider: provider || 'openai', // Use provided provider or default to OpenAI
+          provider: provider || "openai", // Use provided provider or default to OpenAI
         }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to start streaming response');
+        throw new Error("Failed to start streaming response");
       }
 
       if (!response.body) {
-        throw new Error('No response body');
+        throw new Error("No response body");
       }
 
       const reader = response.body.getReader();
@@ -122,17 +143,17 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
           if (done) break;
 
           const chunk = decoder.decode(value, { stream: true });
-          const lines = chunk.split('\n');
+          const lines = chunk.split("\n");
 
           for (const line of lines) {
-            if (line.startsWith('data: ')) {
+            if (line.startsWith("data: ")) {
               try {
                 const data = JSON.parse(line.slice(6));
-                
-                if (data.type === 'chunk' && data.data?.delta?.content) {
+
+                if (data.type === "chunk" && data.data?.delta?.content) {
                   fullContent += data.data.delta.content;
                   setStreamingMessage(fullContent);
-                } else if (data.type === 'complete') {
+                } else if (data.type === "complete") {
                   // Streaming complete, save to database
                   if (threadId) {
                     await saveStreamedMessage(threadId, message, fullContent);
@@ -141,11 +162,11 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
                     window.location.reload();
                   }, 100);
                   return;
-                } else if (data.type === 'error') {
+                } else if (data.type === "error") {
                   throw new Error(data.error);
                 }
               } catch (parseError) {
-                console.warn('Failed to parse streaming data:', parseError);
+                console.warn("Failed to parse streaming data:", parseError);
               }
             }
           }
@@ -153,47 +174,50 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
       } finally {
         reader.releaseLock();
       }
-
     } catch (error) {
-      console.error('Streaming error:', error);
-      setOptimisticMessages(prev => prev.slice(0, -1)); // Remove optimistic user message
+      console.error("Streaming error:", error);
+      setOptimisticMessages((prev) => prev.slice(0, -1)); // Remove optimistic user message
     } finally {
       setIsStreaming(false);
       setStreamingMessage("");
     }
   };
 
-  const saveStreamedMessage = async (threadId: string, userMessage: string, aiResponse: string) => {
+  const saveStreamedMessage = async (
+    threadId: string,
+    userMessage: string,
+    aiResponse: string,
+  ) => {
     try {
       await fetch(`/chat/${threadId}`, {
-        method: 'POST',
+        method: "POST",
         headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
+          "Content-Type": "application/x-www-form-urlencoded",
         },
         body: new URLSearchParams({
           message: userMessage,
           ai_response: aiResponse,
-          is_streamed: 'true'
+          is_streamed: "true",
         }),
       });
     } catch (error) {
-      console.error('Failed to save streamed message:', error);
+      console.error("Failed to save streamed message:", error);
     }
   };
 
   const updateThreadTitle = async (threadId: string, message: string) => {
     try {
-      const response = await fetch('/api/chat?updateTitle=true', {
-        method: 'POST',
+      const response = await fetch("/api/chat?updateTitle=true", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           threadId,
-          message
+          message,
         }),
       });
-      
+
       if (response.ok) {
         const result = await response.json();
         if (result.success && result.title) {
@@ -202,7 +226,7 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
         }
       }
     } catch (error) {
-      console.error('Failed to update thread title:', error);
+      console.error("Failed to update thread title:", error);
     }
   };
 
@@ -210,27 +234,33 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    const message = formData.get('message') as string;
-    
+    const message = formData.get("message") as string;
+
     if (!message.trim()) return;
-    
+
     setIsSubmitting(true);
-    
+
     // Add user message optimistically
     const userMessage = {
       type: "user",
       content: message.trim(),
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     };
-    
-    setOptimisticMessages(prev => [...prev, userMessage]);
-    
+
+    setOptimisticMessages((prev) => [...prev, userMessage]);
+
     // Clear the input
-    const messageInput = form.querySelector('input[name="message"]') as HTMLInputElement;
-    messageInput.value = '';
-    
+    const messageInput = form.querySelector(
+      'input[name="message"]',
+    ) as HTMLInputElement;
+    messageInput.value = "";
+
     // Use streaming response
-    handleStreamingResponse(message.trim(), currentThread?.uuid, currentThread?.llm_provider)
+    handleStreamingResponse(
+      message.trim(),
+      currentThread?.uuid,
+      currentThread?.llm_provider,
+    )
       .finally(() => {
         setIsSubmitting(false);
       });
@@ -240,17 +270,17 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     e.preventDefault();
     const form = e.target as HTMLFormElement;
     const formData = new FormData(form);
-    const message = formData.get('message') as string;
-    
+    const message = formData.get("message") as string;
+
     if (!message.trim()) return;
-    
+
     setIsSubmitting(true);
-    
+
     // Submit the form - backend will create thread and redirect with message parameter
-    fetch('/chat/new', {
-      method: 'POST',
-      body: formData
-    }).then(response => {
+    fetch("/chat/new", {
+      method: "POST",
+      body: formData,
+    }).then((response) => {
       if (response.redirected) {
         // Navigate to the new thread - useEffect will handle automatic message submission
         window.location.href = response.url;
@@ -264,7 +294,7 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     <div class="flex-1 flex flex-col">
       <ChatHeader currentThread={currentThread} title={threadTitle} />
 
-      <MessageArea 
+      <MessageArea
         error={error}
         currentThread={currentThread}
         allMessages={allMessages}
@@ -275,102 +305,155 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
 
       {/* Input Area */}
       {!error && (
-        currentThread ? (
-          <div class="bg-white border-t border-gray-200 p-4">
-            {isGuestRateLimited ? (
-              <div class="text-center py-4">
-                <p class="text-red-600 mb-3 font-medium">You've reached the 10 message limit for guest accounts.</p>
-                <a 
-                  href="/auth/login" 
-                  class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-                >
-                  Sign In with Google to Continue
-                </a>
-              </div>
-            ) : (
-              <>
-                {user && !user.isLoggedIn && user.messagesRemaining !== undefined && user.messagesRemaining <= 3 && (
-                  <div class="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm text-yellow-800">
-                      <span class="font-medium">Warning:</span> You have {user.messagesRemaining} message{user.messagesRemaining !== 1 ? 's' : ''} remaining. 
-                      <a href="/auth/login" class="text-blue-600 hover:underline ml-1">Sign in</a> to continue chatting without limits.
+        currentThread
+          ? (
+            <div class="bg-white border-t border-gray-200 p-4">
+              {isGuestRateLimited
+                ? (
+                  <div class="text-center py-4">
+                    <p class="text-red-600 mb-3 font-medium">
+                      You've reached the 10 message limit for guest accounts.
                     </p>
+                    <Button
+                      variant="blue"
+                      href="/auth/login"
+                      class="inline-block px-6 py-3 rounded-lg"
+                    >
+                      Sign In with Google to Continue
+                    </Button>
                   </div>
+                )
+                : (
+                  <>
+                    {user && !user.isLoggedIn &&
+                      user.messagesRemaining !== undefined &&
+                      user.messagesRemaining <= 3 && (
+                      <div class="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-800">
+                          <span class="font-medium">Warning:</span> You have
+                          {" "}
+                          {user.messagesRemaining}{" "}
+                          message{user.messagesRemaining !== 1 ? "s" : ""}{" "}
+                          remaining.
+                          <a
+                            href="/auth/login"
+                            class="text-blue-600 hover:underline ml-1"
+                          >
+                            Sign in
+                          </a>{" "}
+                          to continue chatting without limits.
+                        </p>
+                      </div>
+                    )}
+                    <form
+                      onSubmit={handleExistingThreadSubmit}
+                      class="flex gap-2"
+                    >
+                      <input
+                        type="text"
+                        placeholder={isSubmitting || isStreaming
+                          ? "Processing..."
+                          : "Type your message..."}
+                        class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        name="message"
+                        required
+                        disabled={isSubmitting || isGuestRateLimited ||
+                          isStreaming}
+                      />
+                      <input
+                        type="hidden"
+                        name="provider"
+                        value={currentThread.llm_provider}
+                      />
+                      <Button
+                        type="submit"
+                        variant="blue"
+                        disabled={isSubmitting || isGuestRateLimited ||
+                          isStreaming}
+                        class="px-6 py-2 rounded-lg"
+                      >
+                        {isSubmitting ? "Sending..." : "Send"}
+                      </Button>
+                    </form>
+                  </>
                 )}
-                <form onSubmit={handleExistingThreadSubmit} class="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder={isSubmitting || isStreaming ? "Processing..." : "Type your message..."}
-                    class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    name="message"
-                    required
-                    disabled={isSubmitting || isGuestRateLimited || isStreaming}
-                  />
-                  <input type="hidden" name="provider" value={currentThread.llm_provider} />
-                  <button
-                    type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={isSubmitting || isGuestRateLimited || isStreaming}
-                  >
-                    {isSubmitting ? "Sending..." : "Send"}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        ) : (
-          <div class="bg-white border-t border-gray-200 p-4">
-            {isGuestRateLimited ? (
-              <div class="text-center py-4">
-                <p class="text-red-600 mb-3 font-medium">You've reached the 10 message limit for guest accounts.</p>
-                <a 
-                  href="/auth/login" 
-                  class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-                >
-                  Sign In with Google to Continue
-                </a>
-              </div>
-            ) : (
-              <>
-                {user && !user.isLoggedIn && user.messagesRemaining !== undefined && user.messagesRemaining <= 3 && (
-                  <div class="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <p class="text-sm text-yellow-800">
-                      <span class="font-medium">Warning:</span> You have {user.messagesRemaining} message{user.messagesRemaining !== 1 ? 's' : ''} remaining. 
-                      <a href="/auth/login" class="text-blue-600 hover:underline ml-1">Sign in</a> to continue chatting without limits.
+            </div>
+          )
+          : (
+            <div class="bg-white border-t border-gray-200 p-4">
+              {isGuestRateLimited
+                ? (
+                  <div class="text-center py-4">
+                    <p class="text-red-600 mb-3 font-medium">
+                      You've reached the 10 message limit for guest accounts.
                     </p>
+                    <Button
+                      variant="blue"
+                      href="/auth/login"
+                      class="inline-block px-6 py-3 rounded-lg"
+                    >
+                      Sign In with Google to Continue
+                    </Button>
                   </div>
+                )
+                : (
+                  <>
+                    {user && !user.isLoggedIn &&
+                      user.messagesRemaining !== undefined &&
+                      user.messagesRemaining <= 3 && (
+                      <div class="mb-3 p-2 bg-yellow-50 border border-yellow-200 rounded-lg">
+                        <p class="text-sm text-yellow-800">
+                          <span class="font-medium">Warning:</span> You have
+                          {" "}
+                          {user.messagesRemaining}{" "}
+                          message{user.messagesRemaining !== 1 ? "s" : ""}{" "}
+                          remaining.
+                          <a
+                            href="/auth/login"
+                            class="text-blue-600 hover:underline ml-1"
+                          >
+                            Sign in
+                          </a>{" "}
+                          to continue chatting without limits.
+                        </p>
+                      </div>
+                    )}
+                    <form onSubmit={handleNewChatSubmit} class="flex gap-2">
+                      <input
+                        type="text"
+                        placeholder={isSubmitting
+                          ? "Starting chat..."
+                          : "Start a new conversation..."}
+                        class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        name="message"
+                        required
+                        disabled={isSubmitting || isGuestRateLimited}
+                      />
+                      <select
+                        name="provider"
+                        class="border border-gray-300 rounded px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
+                        disabled={isSubmitting || isGuestRateLimited}
+                      >
+                        <option value="openai">OpenAI GPT-4o</option>
+                        <option value="anthropic">Anthropic Claude</option>
+                        <option value="gemini" selected>
+                          Google Gemini 2.5 Flash
+                        </option>
+                      </select>
+                      <Button
+                        type="submit"
+                        variant="blue"
+                        disabled={isSubmitting || isGuestRateLimited}
+                        class="px-6 py-2 rounded-lg"
+                      >
+                        {isSubmitting ? "Starting..." : "Start Chat"}
+                      </Button>
+                    </form>
+                  </>
                 )}
-                <form onSubmit={handleNewChatSubmit} class="flex gap-2">
-                  <input
-                    type="text"
-                    placeholder={isSubmitting ? "Starting chat..." : "Start a new conversation..."}
-                    class="flex-1 border border-gray-300 rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    name="message"
-                    required
-                    disabled={isSubmitting || isGuestRateLimited}
-                  />
-                  <select 
-                    name="provider" 
-                    class="border border-gray-300 rounded px-3 py-2 text-sm disabled:bg-gray-100 disabled:cursor-not-allowed"
-                    disabled={isSubmitting || isGuestRateLimited}
-                  >
-                    <option value="openai">OpenAI GPT-4o</option>
-                    <option value="anthropic">Anthropic Claude</option>
-                    <option value="gemini" selected>Google Gemini 2.5 Flash</option>
-                  </select>
-                  <button
-                    type="submit"
-                    class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                    disabled={isSubmitting || isGuestRateLimited}
-                  >
-                    {isSubmitting ? "Starting..." : "Start Chat"}
-                  </button>
-                </form>
-              </>
-            )}
-          </div>
-        )
+            </div>
+          )
       )}
     </div>
   );
-} 
+}
