@@ -1,10 +1,13 @@
 # Universal AI Client Interface
 
-This directory contains a universal AI client interface that supports multiple AI providers including OpenAI and Gemini.
+This directory contains a universal AI client interface that supports multiple
+AI providers including OpenAI and Gemini.
 
 ## Overview
 
-The system provides a unified interface for interacting with different AI providers, making it easy to switch between providers or add new ones without changing the application code.
+The system provides a unified interface for interacting with different AI
+providers, making it easy to switch between providers or add new ones without
+changing the application code.
 
 ## Architecture
 
@@ -18,6 +21,7 @@ The system provides a unified interface for interacting with different AI provid
 ### Key Interfaces
 
 #### AIClient
+
 ```typescript
 interface AIClient {
   readonly provider: string;
@@ -28,6 +32,7 @@ interface AIClient {
 ```
 
 #### AIMessage
+
 ```typescript
 interface AIMessage {
   role: "user" | "assistant" | "system";
@@ -37,6 +42,7 @@ interface AIMessage {
 ```
 
 #### Database Message Format
+
 ```typescript
 interface Message {
   id: string;
@@ -47,6 +53,7 @@ interface Message {
 ```
 
 #### AIResponse
+
 ```typescript
 interface AIResponse {
   content: string;
@@ -69,7 +76,7 @@ import { aiManager } from "./lib/ai/ai-manager.ts";
 
 // Send a chat message
 const response = await aiManager.chat([
-  { role: "user", content: "Hello!" }
+  { role: "user", content: "Hello!" },
 ]);
 
 console.log(response.content);
@@ -80,7 +87,7 @@ console.log(response.content);
 ```typescript
 // Use a specific provider
 const response = await aiManager.chat([
-  { role: "user", content: "Hello!" }
+  { role: "user", content: "Hello!" },
 ], "gemini");
 ```
 
@@ -107,17 +114,21 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 ## Supported Providers
 
 ### OpenAI
+
 - **Models**: GPT-4o-2024-08-06 (default), GPT-4, GPT-4-turbo, GPT-3.5-turbo
 - **Features**: Full chat completion support, token usage tracking
 - **Requires**: `OPENAI_API_KEY` environment variable
 
 ### Google Gemini
-- **Models**: gemini-2.5-flash (default), Gemini-1.5-flash, Gemini-1.5-pro, Gemini-pro
+
+- **Models**: gemini-2.5-flash (default), Gemini-1.5-flash, Gemini-1.5-pro,
+  Gemini-pro
 - **Features**: Chat completion with automatic message format conversion
 - **Requires**: `GEMINI_API_KEY` environment variable
 - **Note**: System messages are converted to user messages with "System:" prefix
 
 ### Anthropic Claude (Planned)
+
 - **Status**: Interface ready, implementation pending
 - **Models**: Claude-3-sonnet, Claude-3-haiku
 - **Requires**: `ANTHROPIC_API_KEY` environment variable
@@ -125,27 +136,29 @@ ANTHROPIC_API_KEY=your_anthropic_api_key
 ## API Routes
 
 ### POST /api/chat
+
 Send a chat completion request:
 
 ```javascript
-const response = await fetch('/api/chat', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    messages: [{ role: 'user', content: 'Hello!' }],
-    provider: 'openai', // optional
-    model: 'gpt-4', // optional
+    messages: [{ role: "user", content: "Hello!" }],
+    provider: "openai", // optional
+    model: "gpt-4", // optional
     temperature: 0.7, // optional
-    maxTokens: 1000 // optional
-  })
+    maxTokens: 1000, // optional
+  }),
 });
 ```
 
 ### GET /api/chat
+
 Get available providers and their status:
 
 ```javascript
-const response = await fetch('/api/chat');
+const response = await fetch("/api/chat");
 const data = await response.json();
 // Returns: { providers: [...], defaultProvider: "openai" }
 ```
@@ -159,7 +172,8 @@ The system includes comprehensive error handling:
 - **Network errors**: When requests fail due to connectivity issues
 - **Format errors**: When responses don't match expected format
 
-All errors are wrapped in a consistent `AIError` interface with provider information.
+All errors are wrapped in a consistent `AIError` interface with provider
+information.
 
 ## Adding New Providers
 
@@ -172,11 +186,12 @@ To add a new AI provider:
 5. Add display name in `getProviderDisplayName()`
 
 Example:
+
 ```typescript
 export class NewProviderClient implements AIClient {
   readonly provider = "newprovider";
   readonly defaultModel = "model-v1";
-  
+
   // Implement required methods...
 }
 ```
@@ -189,23 +204,39 @@ The AI client system is integrated into the chat routes:
 - **`routes/chat/[id].tsx`** - Continues existing conversations
 - **`routes/api/chat.ts`** - Direct API access for frontend interactions
 
-The system gracefully handles both anonymous and authenticated users, with fallback responses when API keys are not configured.
+The system gracefully handles both anonymous and authenticated users, with
+fallback responses when API keys are not configured.
 
 ## Message Format
 
-The system uses a specific message format for database storage that differs from the AI client interface:
+The system uses a specific message format for database storage that differs from
+the AI client interface:
 
 ### Database Storage Format
+
 Messages are stored in the database as JSON arrays with this structure:
+
 ```json
 [
-  { "id": "uuid", "type": "user", "content": "What model are you?", "timestamp": "2024-01-01T12:00:00Z" },
-  { "id": "uuid", "type": "gpt-4o-2024-08-06", "content": "I'm GPT-4o from OpenAI.", "timestamp": "2024-01-01T12:00:01Z" }
+  {
+    "id": "uuid",
+    "type": "user",
+    "content": "What model are you?",
+    "timestamp": "2024-01-01T12:00:00Z"
+  },
+  {
+    "id": "uuid",
+    "type": "gpt-4o-2024-08-06",
+    "content": "I'm GPT-4o from OpenAI.",
+    "timestamp": "2024-01-01T12:00:01Z"
+  }
 ]
 ```
 
 ### AI Client Interface Format
+
 For communication with AI providers, messages are converted to:
+
 ```json
 [
   { "role": "user", "content": "What model are you?" },
@@ -214,9 +245,12 @@ For communication with AI providers, messages are converted to:
 ```
 
 ### Key Differences
-- **Database**: Uses `type` field with "user" or actual model name (e.g., "gpt-4o-2024-08-06")
+
+- **Database**: Uses `type` field with "user" or actual model name (e.g.,
+  "gpt-4o-2024-08-06")
 - **AI Client**: Uses `role` field with "user", "assistant", or "system"
 - **Database**: Includes `id` and `timestamp` fields for tracking
 - **AI Client**: Minimal structure focused on conversation flow
 
-This dual format allows the UI to display which specific model generated each response while maintaining compatibility with different AI provider APIs. 
+This dual format allows the UI to display which specific model generated each
+response while maintaining compatibility with different AI provider APIs.

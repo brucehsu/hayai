@@ -33,9 +33,9 @@ let db: Database;
 
 export function initDB() {
   const dbPath = Deno.env.get("DATABASE_PATH") || "./database.db";
-  
+
   db = new Database(dbPath);
-  
+
   // Create users table
   db.exec(`
     CREATE TABLE IF NOT EXISTS users (
@@ -49,7 +49,7 @@ export function initDB() {
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
     )
   `);
-  
+
   // Create threads table
   db.exec(`
     CREATE TABLE IF NOT EXISTS threads (
@@ -64,21 +64,23 @@ export function initDB() {
       FOREIGN KEY (user_id) REFERENCES users (id)
     )
   `);
-  
+
   // Add uuid column if it doesn't exist (for existing databases)
   try {
     db.exec(`ALTER TABLE threads ADD COLUMN uuid TEXT UNIQUE`);
   } catch {
     // Column already exists or other error, ignore
   }
-  
+
   // Update existing threads that don't have UUIDs
-  const threadsWithoutUuid = db.prepare("SELECT id FROM threads WHERE uuid IS NULL").all();
+  const threadsWithoutUuid = db.prepare(
+    "SELECT id FROM threads WHERE uuid IS NULL",
+  ).all();
   for (const thread of threadsWithoutUuid) {
     const uuid = crypto.randomUUID();
     db.prepare("UPDATE threads SET uuid = ? WHERE id = ?").run(uuid, thread.id);
   }
-  
+
   // Create trigger to update updated_at timestamp
   db.exec(`
     CREATE TRIGGER IF NOT EXISTS update_users_timestamp 
@@ -87,7 +89,7 @@ export function initDB() {
       UPDATE users SET updated_at = CURRENT_TIMESTAMP WHERE id = NEW.id;
     END
   `);
-  
+
   db.exec(`
     CREATE TRIGGER IF NOT EXISTS update_threads_timestamp 
     AFTER UPDATE ON threads
@@ -105,11 +107,19 @@ export function getDB(): Database {
 }
 
 // User operations
-export function createUser(user: Omit<User, "id" | "created_at" | "updated_at">): User {
+export function createUser(
+  user: Omit<User, "id" | "created_at" | "updated_at">,
+): User {
   const stmt = getDB().prepare(
-    "INSERT INTO users (email, name, avatar_url, oauth_id, oauth_type) VALUES (?, ?, ?, ?, ?) RETURNING *"
+    "INSERT INTO users (email, name, avatar_url, oauth_id, oauth_type) VALUES (?, ?, ?, ?, ?) RETURNING *",
   );
-  const result = stmt.get(user.email, user.name, user.avatar_url || null, user.oauth_id, user.oauth_type);
+  const result = stmt.get(
+    user.email,
+    user.name,
+    user.avatar_url || null,
+    user.oauth_id,
+    user.oauth_type,
+  );
   return result as User;
 }
 
@@ -120,13 +130,17 @@ export function getUserByOAuthId(oauthId: string): User | null {
 }
 
 export function getUserByGoogleId(googleId: string): User | null {
-  const stmt = getDB().prepare("SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'google'");
+  const stmt = getDB().prepare(
+    "SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'google'",
+  );
   const result = stmt.get(googleId);
   return result as User || null;
 }
 
 export function getUserByGuestId(guestId: string): User | null {
-  const stmt = getDB().prepare("SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'guest'");
+  const stmt = getDB().prepare(
+    "SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'guest'",
+  );
   const result = stmt.get(guestId);
   return result as User || null;
 }
@@ -138,17 +152,27 @@ export function getUserById(id: number): User | null {
 }
 
 // Thread operations
-export function createThread(thread: Omit<Thread, "id" | "uuid" | "created_at" | "updated_at">): Thread {
+export function createThread(
+  thread: Omit<Thread, "id" | "uuid" | "created_at" | "updated_at">,
+): Thread {
   const uuid = crypto.randomUUID();
   const stmt = getDB().prepare(
-    "INSERT INTO threads (uuid, user_id, title, messages, llm_provider) VALUES (?, ?, ?, ?, ?) RETURNING *"
+    "INSERT INTO threads (uuid, user_id, title, messages, llm_provider) VALUES (?, ?, ?, ?, ?) RETURNING *",
   );
-  const result = stmt.get(uuid, thread.user_id, thread.title, thread.messages, thread.llm_provider);
+  const result = stmt.get(
+    uuid,
+    thread.user_id,
+    thread.title,
+    thread.messages,
+    thread.llm_provider,
+  );
   return result as Thread;
 }
 
 export function getThreadsByUserId(userId: number): Thread[] {
-  const stmt = getDB().prepare("SELECT * FROM threads WHERE user_id = ? ORDER BY updated_at DESC");
+  const stmt = getDB().prepare(
+    "SELECT * FROM threads WHERE user_id = ? ORDER BY updated_at DESC",
+  );
   const result = stmt.all(userId);
   return result as Thread[];
 }
@@ -165,19 +189,27 @@ export function getThreadByUuid(uuid: string): Thread | null {
   return result as Thread || null;
 }
 
-export function updateThread(id: number, updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>): void {
-  const setClause = Object.keys(updates).map(key => `${key} = ?`).join(", ");
+export function updateThread(
+  id: number,
+  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>,
+): void {
+  const setClause = Object.keys(updates).map((key) => `${key} = ?`).join(", ");
   const values = Object.values(updates);
-  
+
   const stmt = getDB().prepare(`UPDATE threads SET ${setClause} WHERE id = ?`);
   stmt.run(...values, id);
 }
 
-export function updateThreadByUuid(uuid: string, updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>): void {
-  const setClause = Object.keys(updates).map(key => `${key} = ?`).join(", ");
+export function updateThreadByUuid(
+  uuid: string,
+  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>,
+): void {
+  const setClause = Object.keys(updates).map((key) => `${key} = ?`).join(", ");
   const values = Object.values(updates);
-  
-  const stmt = getDB().prepare(`UPDATE threads SET ${setClause} WHERE uuid = ?`);
+
+  const stmt = getDB().prepare(
+    `UPDATE threads SET ${setClause} WHERE uuid = ?`,
+  );
   stmt.run(...values, uuid);
 }
 
@@ -193,17 +225,18 @@ export function deleteThreadByUuid(uuid: string): void {
 
 // Rate limiting functions for guest users
 export function countUserMessagesForUser(userId: number): number {
-  const stmt = getDB().prepare("SELECT messages FROM threads WHERE user_id = ?");
+  const stmt = getDB().prepare(
+    "SELECT messages FROM threads WHERE user_id = ?",
+  );
   const threads = stmt.all(userId) as Thread[];
-  
+
   let totalUserMessages = 0;
-  
+
   for (const thread of threads) {
     const messages = JSON.parse(thread.messages || "[]") as Message[];
-    const userMessages = messages.filter(msg => msg.type === "user");
+    const userMessages = messages.filter((msg) => msg.type === "user");
     totalUserMessages += userMessages.length;
   }
-  
+
   return totalUserMessages;
 }
- 

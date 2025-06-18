@@ -43,22 +43,25 @@ export interface AIClient {
    * The provider name (e.g., 'openai', 'gemini')
    */
   readonly provider: string;
-  
+
   /**
    * The default model for this client
    */
   readonly defaultModel: string;
-  
+
   /**
    * Send a chat completion request
    */
   chat(messages: AIMessage[], options?: ChatOptions): Promise<AIResponse>;
-  
+
   /**
    * Send a streaming chat completion request
    */
-  chatStream(messages: AIMessage[], options?: ChatOptions): AsyncIterable<AIStreamResponse>;
-  
+  chatStream(
+    messages: AIMessage[],
+    options?: ChatOptions,
+  ): AsyncIterable<AIStreamResponse>;
+
   /**
    * Check if the client is properly configured
    */
@@ -78,4 +81,4 @@ export interface AIError extends Error {
   provider: string;
   statusCode?: number;
   type?: string;
-} 
+}

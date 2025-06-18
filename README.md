@@ -1,16 +1,21 @@
 # Hayai
 
-A full-stack AI chat web application built with Deno Fresh, featuring multiple AI model support through a universal client interface, user authentication, and persistent chat threads.
+A full-stack AI chat web application built with Deno Fresh, featuring multiple
+AI model support through a universal client interface, user authentication, and
+persistent chat threads.
 
 ## Features
 
-- 🤖 **Universal AI Interface**: Unified API supporting OpenAI GPT-4o, Google Gemini 2.5 Flash, and Anthropic Claude (planned)
+- 🤖 **Universal AI Interface**: Unified API supporting OpenAI GPT-4o, Google
+  Gemini 2.5 Flash, and Anthropic Claude (planned)
 - 👤 **Google OAuth Authentication**: Secure login with Google accounts
 - 💬 **Persistent Chat Threads**: Organize conversations with UUID-based routing
-- 🎨 **Modern UI**: Clean, responsive design with Tailwind CSS and Islands architecture
+- 🎨 **Modern UI**: Clean, responsive design with Tailwind CSS and Islands
+  architecture
 - 📊 **SQLite Database**: File-based database with automatic migrations
 - 🔧 **Server-side API Key Management**: Configure AI provider keys server-side
-- ⚡ **Real-time AI Integration**: Actual API calls to AI providers (not mock responses)
+- ⚡ **Real-time AI Integration**: Actual API calls to AI providers (not mock
+  responses)
 - 🏝️ **Islands Architecture**: Interactive components with optimistic updates
 
 ## Tech Stack
@@ -65,6 +70,7 @@ A full-stack AI chat web application built with Deno Fresh, featuring multiple A
 ## Database Schema
 
 ### Users Table
+
 - `id`: Primary key (auto-increment)
 - `email`: User email from Google OAuth
 - `name`: User display name
@@ -74,6 +80,7 @@ A full-stack AI chat web application built with Deno Fresh, featuring multiple A
 - `created_at`, `updated_at`: Auto-managed timestamps
 
 ### Threads Table
+
 - `id`: Primary key (auto-increment)
 - `uuid`: Unique identifier for URL routing
 - `user_id`: Foreign key to users table
@@ -83,6 +90,7 @@ A full-stack AI chat web application built with Deno Fresh, featuring multiple A
 - `created_at`, `updated_at`: Auto-managed timestamps with triggers
 
 ### Message Format (in JSON)
+
 ```json
 {
   "id": "uuid",
@@ -107,12 +115,14 @@ The application features a sophisticated AI client system that provides:
 ### Supported AI Providers
 
 #### OpenAI (Fully Implemented)
+
 - **Default Model**: GPT-4o-2024-08-06
 - **Available Models**: GPT-4, GPT-4-turbo, GPT-3.5-turbo
 - **Features**: Full chat completion, token usage tracking
 - **Configuration**: Requires `OPENAI_API_KEY`
 
 #### Google Gemini (Fully Implemented)
+
 - **Default Model**: gemini-2.5-flash
 - **Available Models**: Gemini-1.5-flash, Gemini-1.5-pro, Gemini-pro
 - **Features**: Chat completion with message format conversion
@@ -120,6 +130,7 @@ The application features a sophisticated AI client system that provides:
 - **Note**: System messages converted to user messages with "System:" prefix
 
 #### Anthropic Claude (Interface Ready)
+
 - **Status**: Client interface implemented, API integration pending
 - **Planned Models**: Claude-3-sonnet, Claude-3-haiku
 - **Configuration**: Will require `ANTHROPIC_API_KEY`
@@ -129,6 +140,7 @@ The application features a sophisticated AI client system that provides:
 ### 1. Prerequisites
 
 Install Deno 2.0+:
+
 ```bash
 curl -fsSL https://deno.land/install.sh | sh
 ```
@@ -136,11 +148,13 @@ curl -fsSL https://deno.land/install.sh | sh
 ### 2. Environment Configuration
 
 Copy the example environment file:
+
 ```bash
 cp env.example .env
 ```
 
 Configure your `.env` file:
+
 ```env
 # Google OAuth (Required)
 GOOGLE_CLIENT_ID=your_google_client_id
@@ -174,6 +188,7 @@ HOST_URL=http://localhost:8000
 ### 4. Run the Application
 
 Start the development server:
+
 ```bash
 deno task start
 ```
@@ -183,6 +198,7 @@ The application will be available at http://localhost:8000
 ## Usage
 
 ### Getting Started
+
 1. **Authentication**: Click "Continue with Google" to sign in
 2. **New Chat**: Click "New Chat" or start typing in the input area
 3. **Model Selection**: Use the dropdown in chat header to switch AI providers
@@ -190,6 +206,7 @@ The application will be available at http://localhost:8000
 5. **Navigation**: Access chat history from the sidebar
 
 ### AI Provider Management
+
 - The app automatically detects which AI providers are configured
 - Unconfigured providers are gracefully disabled in the UI
 - Provider switching is supported mid-conversation
@@ -198,25 +215,29 @@ The application will be available at http://localhost:8000
 ### API Endpoints
 
 #### POST /api/chat
+
 Direct AI completion API:
+
 ```javascript
-const response = await fetch('/api/chat', {
-  method: 'POST',
-  headers: { 'Content-Type': 'application/json' },
+const response = await fetch("/api/chat", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
-    messages: [{ role: 'user', content: 'Hello!' }],
-    provider: 'openai', // optional: 'openai', 'gemini', 'anthropic'
-    model: 'gpt-4o-2024-08-06', // optional, uses provider default
+    messages: [{ role: "user", content: "Hello!" }],
+    provider: "openai", // optional: 'openai', 'gemini', 'anthropic'
+    model: "gpt-4o-2024-08-06", // optional, uses provider default
     temperature: 0.7, // optional
-    maxTokens: 1000 // optional
-  })
+    maxTokens: 1000, // optional
+  }),
 });
 ```
 
 #### GET /api/chat
+
 Get available providers and configuration:
+
 ```javascript
-const response = await fetch('/api/chat');
+const response = await fetch("/api/chat");
 const data = await response.json();
 // Returns: { providers: [...], defaultProvider: "openai" }
 ```
@@ -253,17 +274,21 @@ To integrate a new AI provider:
 5. **Set Display Name**: Add name in `getProviderDisplayName()`
 
 Example client implementation:
+
 ```typescript
 export class CustomAIClient implements AIClient {
   readonly provider = "custom";
   readonly defaultModel = "custom-v1";
-  
+
   constructor(private config: AIClientConfig) {}
-  
-  async chat(messages: AIMessage[], options?: ChatOptions): Promise<AIResponse> {
+
+  async chat(
+    messages: AIMessage[],
+    options?: ChatOptions,
+  ): Promise<AIResponse> {
     // Implementation here
   }
-  
+
   isConfigured(): boolean {
     return !!this.config.apiKey;
   }
@@ -273,12 +298,14 @@ export class CustomAIClient implements AIClient {
 ### Database Management
 
 The SQLite database includes:
+
 - **Auto-initialization**: Creates tables on first run
 - **Migrations**: UUID column added automatically to existing databases
 - **Triggers**: Automatic timestamp updates
 - **Data Integrity**: Foreign key constraints
 
 To reset the database:
+
 ```bash
 rm database.db
 ```
@@ -286,6 +313,7 @@ rm database.db
 ### Islands Architecture
 
 The app uses Fresh's Islands architecture for optimal performance:
+
 - **Server-Side Rendering**: Initial page loads are fast
 - **Selective Hydration**: Only interactive components run on client
 - **Optimistic Updates**: Immediate UI feedback before server response
@@ -293,32 +321,39 @@ The app uses Fresh's Islands architecture for optimal performance:
 ## Production Deployment
 
 ### Environment Setup
+
 1. Set `HOST_URL` to your production domain
 2. Generate secure `SESSION_SECRET` (32+ random characters)
 3. Configure production OAuth redirect URIs in Google Console
 4. Set up AI provider API keys based on your needs
 
 ### Deployment Options
+
 - **Deno Deploy**: Native support for Deno Fresh applications
 - **Docker**: Use official Deno Docker images
 - **VPS**: Direct deployment with systemd service
 
 ### Performance Considerations
+
 - SQLite is suitable for moderate traffic; consider PostgreSQL for high volume
 - AI API rate limits vary by provider
-- Session data is stored server-side in memory (consider Redis for multi-instance)
+- Session data is stored server-side in memory (consider Redis for
+  multi-instance)
 
 ## Contributing
 
 The project follows standard Deno and Fresh conventions:
+
 - Use `deno fmt` for code formatting
 - Run `deno lint` for code quality
 - TypeScript strict mode is enabled
 - All AI clients must implement the `AIClient` interface
 
 ## TODO
+
 - Purge guest accounts and threads periodically
 
 ## License
 
-MIT License - feel free to use this project as a starting point for your own AI chat applications. 
+MIT License - feel free to use this project as a starting point for your own AI
+chat applications.
