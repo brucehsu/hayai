@@ -86,7 +86,7 @@ export default function Sidebar(
           href="/chat/new"
           class="w-full flex items-center justify-center"
         >
-          + New Chat
+          New Chat
         </Button>
       </div>
 
