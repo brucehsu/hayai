@@ -32,35 +32,58 @@ export default function MessageArea({
     }
   }, [allMessages.length, streamingMessage, isStreaming, isSubmitting]);
 
+  const renderStreamingMessage = () => {
+    const shouldShowStreamingMessage = (isSubmitting || isStreaming) &&
+      currentThread;
+
+    if (!shouldShowStreamingMessage) {
+      return null;
+    }
+
+    const streamingContent = isStreaming && streamingMessage
+      ? `${streamingMessage}<span class="animate-pulse">|</span>`
+      : "Thinking...";
+
+    return (
+      <Message
+        key={allMessages.length}
+        message={{
+          type: "assistant",
+          content: streamingContent,
+        }}
+      />
+    );
+  };
+
+  let children;
+
+  // Handle error state
+  if (error) {
+    children = <ErrorState error={error} />;
+  } // Handle no current thread
+  else if (!currentThread) {
+    children = <EmptyState />;
+  } // Handle empty messages and not streaming
+  else if (allMessages.length === 0 && !isStreaming) {
+    children = <EmptyState />;
+  } // Render messages
+  else {
+    children = (
+      <div class="space-y-4">
+        {allMessages.map((message: any, index: number) => (
+          <Message key={index} message={message} />
+        ))}
+        {renderStreamingMessage()}
+      </div>
+    );
+  }
+
   return (
     <div
       ref={scrollContainerRef}
       class="flex-1 overflow-y-auto p-4 bg-gray-50"
     >
-      {error
-        ? <ErrorState error={error} />
-        : !currentThread
-        ? <EmptyState />
-        : allMessages.length === 0 && !isStreaming
-        ? <EmptyState />
-        : (
-          <div class="space-y-4">
-            {allMessages.map((message: any, index: number) => (
-              <Message key={index} message={message} />
-            ))}
-            {(isSubmitting || isStreaming) && currentThread && (
-              <Message
-                key={allMessages.length}
-                message={{
-                  type: "assistant",
-                  content: isStreaming && streamingMessage
-                    ? `${streamingMessage}<span class="animate-pulse">|</span>`
-                    : "Thinking...",
-                }}
-              />
-            )}
-          </div>
-        )}
+      {children}
     </div>
   );
 }
