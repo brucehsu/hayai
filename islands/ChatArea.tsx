@@ -253,7 +253,7 @@ export default function ChatArea(
 
     // Clear the input
     const messageInput = form.querySelector(
-      'input[name="message"]',
+      'textarea[name="message"]',
     ) as HTMLInputElement;
     messageInput.value = "";
 
