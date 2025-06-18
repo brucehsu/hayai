@@ -77,25 +77,16 @@ export default function ChatHeader(
           )}
         </div>
         {currentThread && (
-          <form method="post" class="flex items-center gap-2">
-            <label class="text-sm text-gray-600">Model:</label>
-            <select
-              name="provider"
-              class="border border-gray-300 rounded px-3 py-1 text-sm"
-              value={currentThread.llm_provider}
-              onChange={(e) => (e.target as HTMLSelectElement).form?.submit()}
-              disabled={!isOwner}
-            >
-              <option value="openai">OpenAI GPT-4o</option>
-              <option value="gemini">Google Gemini 2.5 Flash</option>
-            </select>
+          <div class="flex items-center gap-2">
+            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+              {currentThread.llm_provider === 'openai' ? 'OpenAI GPT-4o' : 'Google Gemini 2.5 Flash'}
+            </span>
             <img 
               src="/logo.png" 
               alt="hayai Logo" 
               class="h-8 w-auto mr-2"
             />
-            <input type="hidden" name="message" value="" />
-          </form>
+          </div>
         )}
       </div>
     </div>
