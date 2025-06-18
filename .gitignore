@@ -137,3 +137,5 @@ dist
 
 # Assets
 database.db
+# Fresh build directory
+_fresh/

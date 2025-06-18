@@ -1,13 +1,19 @@
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage, AIProvider } from "../../lib/ai/types.ts";
+import { updateThreadByUuid } from "../../db/database.ts";
 
 export const handler = {
   async POST(req: Request, _ctx) {
     const url = new URL(req.url);
     const isStreaming = url.searchParams.get('stream') === 'true';
+    const isUpdateTitle = url.searchParams.get('updateTitle') === 'true';
     
     if (isStreaming) {
       return handleStreamingRequest(req);
+    }
+    
+    if (isUpdateTitle) {
+      return handleTitleUpdateRequest(req);
     }
     
     try {
@@ -213,6 +219,72 @@ async function handleStreamingRequest(req: Request): Promise<Response> {
     return new Response(
       JSON.stringify({ 
         error: error.message || "An error occurred while processing the streaming request",
+        success: false
+      }),
+      { 
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+  }
+}
+
+async function handleTitleUpdateRequest(req: Request): Promise<Response> {
+  try {
+    const { threadId, message } = await req.json();
+    
+    if (!threadId || !message) {
+      return new Response(
+        JSON.stringify({ error: "Missing required parameters" }),
+        { 
+          status: 400,
+          headers: { "Content-Type": "application/json" }
+        }
+      );
+    }
+    
+    // Generate title using Gemini
+    let title = message.trim().slice(0, 50) + (message.length > 50 ? "..." : ""); // fallback
+    
+    try {
+      if (aiManager.isProviderAvailable("gemini")) {
+        const titlePrompt = `Given this message "${message}" and the language it's written in, give me a 40-character overview as title without any formatting.`;
+        const titleResponse = await aiManager.chat(
+          [{ role: "user", content: titlePrompt }] as AIMessage[],
+          "gemini",
+          {
+            model: "gemini-2.5-flash-lite-preview-06-17",
+            temperature: 0.3,
+            maxTokens: 50
+          }
+        );
+        title = titleResponse.content.trim();
+      }
+    } catch (error) {
+      console.error("Title generation error:", error);
+      // Keep fallback title
+    }
+    
+    // Update the thread title
+    updateThreadByUuid(threadId, { title });
+    
+    return new Response(
+      JSON.stringify({
+        success: true,
+        title: title,
+        message: "Thread title updated successfully"
+      }),
+      {
+        status: 200,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
+  } catch (error) {
+    console.error("Title update error:", error);
+    
+    return new Response(
+      JSON.stringify({ 
+        error: error.message || "An error occurred while updating the thread title",
         success: false
       }),
       { 

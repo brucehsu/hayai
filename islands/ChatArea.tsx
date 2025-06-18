@@ -1,6 +1,8 @@
 import { JSX } from "preact";
-import { useState, useRef } from "preact/hooks";
+import { useState, useRef, useEffect } from "preact/hooks";
 import Message from "../components/Message.tsx";
+import ChatHeader from "../components/ChatHeader.tsx";
+import MessageArea from "../components/MessageArea.tsx";
 
 interface ChatAreaProps {
   currentThread: any;
@@ -21,15 +23,56 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
   const [optimisticMessages, setOptimisticMessages] = useState<any[]>([]);
   const [streamingMessage, setStreamingMessage] = useState<string>("");
   const [isStreaming, setIsStreaming] = useState(false);
+  const [threadTitle, setThreadTitle] = useState<string>(currentThread?.title || "New Conversation");
   const eventSourceRef = useRef<EventSource | null>(null);
   
   const baseMessages = currentThread ? JSON.parse(currentThread.messages || "[]") : [];
   const allMessages = [...baseMessages, ...optimisticMessages];
   
+  // Check if this is a new empty thread
+  const isNewEmptyThread = currentThread && baseMessages.length === 0;
+  
   // Check if guest user is rate limited
   const isGuestRateLimited = Boolean(user && !user.isLoggedIn && user.isRateLimited);
 
-  const handleStreamingResponse = async (message: string, threadId?: string) => {
+  // Update title state when currentThread changes
+  useEffect(() => {
+    if (currentThread?.title) {
+      setThreadTitle(currentThread.title);
+    }
+  }, [currentThread?.title]);
+
+  // Handle automatic message submission for new threads
+  useEffect(() => {
+    if (isNewEmptyThread && !isSubmitting && !isStreaming) {
+      const urlParams = new URLSearchParams(window.location.search);
+      const message = urlParams.get('message');
+      
+      if (message && message.trim()) {
+        // Clear the URL parameter
+        const newUrl = window.location.pathname;
+        window.history.replaceState(null, '', newUrl);
+        
+        // Add user message optimistically
+        const userMessage = {
+          type: "user",
+          content: message.trim(),
+          timestamp: new Date().toISOString()
+        };
+        
+        setOptimisticMessages([userMessage]);
+        setIsSubmitting(true);
+        
+        // Use streaming response
+        handleStreamingResponse(message.trim(), currentThread.uuid, currentThread.llm_provider)
+          .finally(() => {
+            setIsSubmitting(false);
+          });
+      }
+    }
+  }, [isNewEmptyThread, currentThread, isSubmitting, isStreaming]);
+
+  const handleStreamingResponse = async (message: string, threadId?: string, provider?: string) => {
     try {
       setIsStreaming(true);
       setStreamingMessage("");
@@ -42,6 +85,13 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
         timestamp: msg.timestamp
       }));
 
+      // For new threads with empty messages, also trigger title update
+      const isNewThread = baseMessages.length === 0 && threadId;
+      if (isNewThread) {
+        // Trigger title update asynchronously
+        updateThreadTitle(threadId, message);
+      }
+
       // Call streaming API
       const response = await fetch('/api/chat?stream=true', {
         method: 'POST',
@@ -50,7 +100,7 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
         },
         body: JSON.stringify({
           messages: aiMessages,
-          provider: 'openai', // Use OpenAI for more reliable streaming
+          provider: provider || 'openai', // Use provided provider or default to OpenAI
         }),
       });
 
@@ -131,6 +181,31 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     }
   };
 
+  const updateThreadTitle = async (threadId: string, message: string) => {
+    try {
+      const response = await fetch('/api/chat?updateTitle=true', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          threadId,
+          message
+        }),
+      });
+      
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.title) {
+          // Update the title in the UI immediately
+          setThreadTitle(result.title);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to update thread title:', error);
+    }
+  };
+
   const handleExistingThreadSubmit = (e: Event) => {
     e.preventDefault();
     const form = e.target as HTMLFormElement;
@@ -155,7 +230,7 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     messageInput.value = '';
     
     // Use streaming response
-    handleStreamingResponse(message.trim(), currentThread?.uuid)
+    handleStreamingResponse(message.trim(), currentThread?.uuid, currentThread?.llm_provider)
       .finally(() => {
         setIsSubmitting(false);
       });
@@ -171,12 +246,13 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
     
     setIsSubmitting(true);
     
-    // Submit the form
+    // Submit the form - backend will create thread and redirect with message parameter
     fetch('/chat/new', {
       method: 'POST',
       body: formData
     }).then(response => {
       if (response.redirected) {
+        // Navigate to the new thread - useEffect will handle automatic message submission
         window.location.href = response.url;
       }
     }).catch(() => {
@@ -186,85 +262,16 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
 
   return (
     <div class="flex-1 flex flex-col">
-      {/* Header with LLM Selector */}
-      <div class="bg-white border-b border-gray-200 p-4">
-        <div class="flex items-center justify-between">
-          <h2 class="text-lg font-semibold">
-            {currentThread ? currentThread.title : "Hayai"}
-          </h2>
-          {currentThread && (
-            <form method="post" class="flex items-center gap-2">
-              <label class="text-sm text-gray-600">Model:</label>
-              <select 
-                name="provider"
-                class="border border-gray-300 rounded px-3 py-1 text-sm"
-                value={currentThread.llm_provider}
-                onChange={(e) => (e.target as HTMLSelectElement).form?.submit()}
-                disabled={true}
-              >
-                <option value="openai">OpenAI GPT-4o</option>
-                <option value="anthropic">Anthropic Claude</option>
-                <option value="gemini">Google Gemini 2.5 Flash</option>
-              </select>
-              <input type="hidden" name="message" value="" />
-            </form>
-          )}
-        </div>
-      </div>
+      <ChatHeader currentThread={currentThread} title={threadTitle} />
 
-      {/* Messages Area */}
-      <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
-        {error ? (
-          <div class="flex items-center justify-center h-full">
-            <div class="text-center text-gray-500">
-              <p class="text-xl mb-4 text-red-600">{error}</p>
-              <a 
-                href="/auth/login" 
-                class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-              >
-                Sign In with Google
-              </a>
-            </div>
-          </div>
-        ) : !currentThread ? (
-          <div class="flex items-center justify-center h-full">
-            <div class="text-center text-gray-500">
-              <p class="text-xl mb-4">Welcome to Hayai</p>
-              <p class="mb-6">Start a new conversation or select an existing chat from the sidebar</p>
-              <a 
-                href="/chat/new" 
-                class="inline-block bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg transition-colors"
-              >
-                Start New Chat
-              </a>
-            </div>
-          </div>
-        ) : allMessages.length === 0 && !isStreaming ? (
-          <div class="flex items-center justify-center h-full">
-            <div class="text-center text-gray-500">
-              <p>No messages yet. Start the conversation!</p>
-            </div>
-          </div>
-        ) : (
-          <div class="space-y-4">
-            {allMessages.map((message: any, index: number) => (
-              <Message key={index} message={message} />
-            ))}
-            {(isSubmitting || isStreaming) && currentThread && (
-              <div class="flex justify-start">
-                <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-white text-gray-800 border border-gray-200">
-                  <p class="text-xs text-gray-500 mb-1 font-medium">AI</p>
-                  {isStreaming && streamingMessage ? (
-                    <div class="text-sm whitespace-pre-wrap">{streamingMessage}<span class="animate-pulse">|</span></div>
-                  ) : (
-                    <p class="text-sm text-gray-500">Thinking...</p>
-                  )}
-                </div>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
+      <MessageArea 
+        error={error}
+        currentThread={currentThread}
+        allMessages={allMessages}
+        isStreaming={isStreaming}
+        isSubmitting={isSubmitting}
+        streamingMessage={streamingMessage}
+      />
 
       {/* Input Area */}
       {!error && (

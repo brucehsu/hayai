@@ -88,7 +88,7 @@ export const handler: Handlers<PageData> = {
     let extendedSession = await getExtendedSessionFromRequest(req);
     const formData = await req.formData();
     const message = formData.get("message") as string;
-    const provider = formData.get("provider") as string || "openai";
+    const provider = formData.get("provider") as string || "gemini";
     
     if (!message?.trim()) {
       return new Response("Message is required", { status: 400 });
@@ -128,71 +128,18 @@ export const handler: Handlers<PageData> = {
       return errorResponse;
     }
     
-    // For all users (now including guests), save to database
-    const userMessage = {
-      id: crypto.randomUUID(),
-      type: "user",
-      content: message.trim(),
-      timestamp: new Date().toISOString()
-    };
-    
-    // Get AI response
-    let aiContent = `Hello! I'm ${aiManager.getProviderDisplayName(provider as any)}. Welcome to Hayai!`;
-    let modelUsed = provider;
-    
-    try {
-      if (aiManager.isProviderAvailable(provider as any)) {
-        const aiResponse = await aiManager.chat(
-          [{ role: "user", content: message.trim() }] as AIMessage[],
-          provider as any
-        );
-        aiContent = aiResponse.content;
-        modelUsed = aiResponse.model;
-      }
-    } catch (error) {
-      console.error("AI API Error:", error);
-      aiContent = `Sorry, I encountered an error with ${provider}. ${error.message || "Please try again later."}`;
-    }
-    
-    const aiMessage = {
-      id: crypto.randomUUID(),
-      type: modelUsed, 
-      content: aiContent,
-      timestamp: new Date().toISOString()
-    };
-
-    const messages = [userMessage, aiMessage];
-    
-    // Generate title using Gemini
-    let title = message.trim().slice(0, 50) + (message.length > 50 ? "..." : ""); // fallback
-    try {
-      if (aiManager.isProviderAvailable("gemini")) {
-        const titlePrompt = `Given this message ${message} and the language it's written in, give me a 40-character overview as title without any formatting.`;
-        const titleResponse = await aiManager.chat(
-          [{ role: "user", content: titlePrompt }] as AIMessage[],
-          "gemini",
-          {
-            model: "gemini-2.5-flash-lite-preview-06-17",
-            temperature: 0.3,
-            maxTokens: 50
-          }
-        );
-        title = titleResponse.content.trim();
-      }
-    } catch (error) {
-      console.error("Title generation error:", error);
-      // Keep fallback title
-    }
-    
+    // Create empty thread with placeholder title
     const newThread = createThread({
       user_id: extendedSession.userId,
-      title: title,
-      messages: JSON.stringify(messages),
+      title: "New Conversation", // Placeholder title
+      messages: JSON.stringify([]), // Empty messages array
       llm_provider: provider
     });
     
+    // Redirect to the new thread with the message as URL parameter
     const headers = new Headers();
-    headers.set("location", `/chat/${newThread.uuid}`);
+    const redirectUrl = `/chat/${newThread.uuid}?message=${encodeURIComponent(message.trim())}`;
+    headers.set("location", redirectUrl);
     return new Response(null, { status: 302, headers });
   }
 };
