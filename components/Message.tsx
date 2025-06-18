@@ -17,7 +17,7 @@ export default function Message({ message }: MessageProps): JSX.Element {
       <div
         class={`w-[80%] px-4 py-2 rounded-lg ${
           message.type === "user"
-            ? "bg-blue-600 text-white text-right"
+            ? "bg-user-message text-white text-right"
             : "bg-white text-gray-800 border border-gray-200"
         }`}
       >

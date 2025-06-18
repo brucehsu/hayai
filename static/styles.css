@@ -50,6 +50,10 @@
   background-color: #0D5661;
 }
 
+.bg-user-message {
+  background-color: #4E4F97;
+}
+
 .hover\:bg-thread-hover:hover {
   background-color: #268785;
 }
