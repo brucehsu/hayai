@@ -24,7 +24,7 @@ export default function ChatArea({ currentThread, error, user }: ChatAreaProps):
   const allMessages = [...baseMessages, ...optimisticMessages];
   
   // Check if guest user is rate limited
-  const isGuestRateLimited = user && !user.isLoggedIn && user.isRateLimited;
+  const isGuestRateLimited = Boolean(user && !user.isLoggedIn && user.isRateLimited);
 
   const handleExistingThreadSubmit = (e: Event) => {
     e.preventDefault();

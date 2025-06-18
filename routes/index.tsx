@@ -1,10 +1,18 @@
 import { Handlers, PageProps } from "$fresh/server.ts";
-import { getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie } from "../utils/session.ts";
+import { getExtendedSessionFromRequest, getOrCreateGuestUser, createSession, setSessionCookie, getGuestRateLimit } from "../utils/session.ts";
 import { getThreadsByUserId } from "../db/database.ts";
 import ChatLayout from "../components/ChatLayout.tsx";
 
 interface PageData {
-  user: { id: number; name: string; email: string; isLoggedIn: boolean } | null;
+  user: { 
+    id: number; 
+    name: string; 
+    email: string; 
+    isLoggedIn: boolean;
+    messagesRemaining?: number;
+    messageLimit?: number;
+    isRateLimited?: boolean;
+  } | null;
   threads: any[];
 }
 
@@ -17,10 +25,14 @@ export const handler: Handlers<PageData> = {
       const { user: guestUser, sessionData } = await getOrCreateGuestUser(req);
       const sessionToken = await createSession(sessionData);
       
+      // Get rate limit info for the guest user
+      const rateLimit = getGuestRateLimit(guestUser.id);
+      
       extendedSession = {
         ...sessionData,
         isGuest: true,
-        isLoggedIn: false
+        isLoggedIn: false,
+        ...rateLimit
       };
       
       // Set session cookie
@@ -33,7 +45,10 @@ export const handler: Handlers<PageData> = {
           id: extendedSession.userId,
           name: extendedSession.name,
           email: extendedSession.email,
-          isLoggedIn: extendedSession.isLoggedIn
+          isLoggedIn: extendedSession.isLoggedIn,
+          messagesRemaining: extendedSession.messagesRemaining,
+          messageLimit: extendedSession.messageLimit,
+          isRateLimited: extendedSession.isRateLimited
         },
         threads: getThreadsByUserId(guestUser.id)
       });
@@ -54,7 +69,10 @@ export const handler: Handlers<PageData> = {
         id: extendedSession.userId,
         name: extendedSession.name,
         email: extendedSession.email,
-        isLoggedIn: extendedSession.isLoggedIn
+        isLoggedIn: extendedSession.isLoggedIn,
+        messagesRemaining: extendedSession.messagesRemaining,
+        messageLimit: extendedSession.messageLimit,
+        isRateLimited: extendedSession.isRateLimited
       },
       threads
     });
