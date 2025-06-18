@@ -11,7 +11,9 @@ interface MessageProps {
 export default function Message({ message }: MessageProps): JSX.Element {
   return (
     <div
-      class={`flex ${message.type === "user" ? "justify-end" : "justify-start"}`}
+      class={`flex ${
+        message.type === "user" ? "justify-end" : "justify-start"
+      }`}
     >
       <div
         class={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
@@ -32,4 +34,4 @@ export default function Message({ message }: MessageProps): JSX.Element {
       </div>
     </div>
   );
-} 
+}

@@ -1,4 +1,4 @@
-@import url('https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css');
+@import url("https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css");
 
 /* Custom styles */
 .scrollbar-hide {
@@ -20,6 +20,6 @@
     opacity: 1;
   }
   50% {
-    opacity: .5;
+    opacity: 0.5;
   }
-} 
+}

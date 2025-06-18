@@ -14,4 +14,4 @@ export default function App({ Component }: PageProps) {
       </body>
     </html>
   );
-} 
+}

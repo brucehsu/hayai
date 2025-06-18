@@ -1,5 +1,10 @@
 import { getCookies, setCookie } from "$std/http/cookie.ts";
-import { createUser, getUserByGuestId, type User, countUserMessagesForUser } from "../db/database.ts";
+import {
+  countUserMessagesForUser,
+  createUser,
+  getUserByGuestId,
+  type User,
+} from "../db/database.ts";
 
 // Rate limiting constants
 const GUEST_MESSAGE_LIMIT = 10;
@@ -31,52 +36,58 @@ export async function createSession(data: SessionData): Promise<string> {
   return sessionId;
 }
 
-export async function verifySession(token: string): Promise<SessionData | null> {
+export async function verifySession(
+  token: string,
+): Promise<SessionData | null> {
   return sessions.get(token) || null;
 }
 
-export function getSessionFromRequest(request: Request): Promise<SessionData | null> {
+export function getSessionFromRequest(
+  request: Request,
+): Promise<SessionData | null> {
   const cookies = getCookies(request.headers);
   const sessionToken = cookies.session;
-  
+
   if (!sessionToken) {
     return Promise.resolve(null);
   }
-  
+
   return verifySession(sessionToken);
 }
 
-export async function getExtendedSessionFromRequest(request: Request): Promise<ExtendedSessionData | null> {
+export async function getExtendedSessionFromRequest(
+  request: Request,
+): Promise<ExtendedSessionData | null> {
   const session = await getSessionFromRequest(request);
-  
+
   if (!session) {
     return null;
   }
-  
+
   const isGuest = session.oauth_type === "guest";
   const isLoggedIn = session.oauth_type === "google";
-  
+
   let extendedData: ExtendedSessionData = {
     ...session,
     isGuest,
-    isLoggedIn
+    isLoggedIn,
   };
-  
+
   // Add rate limiting info for guests
   if (isGuest) {
     const messageCount = countUserMessagesForUser(session.userId);
     const messagesRemaining = Math.max(0, GUEST_MESSAGE_LIMIT - messageCount);
     const isRateLimited = messageCount >= GUEST_MESSAGE_LIMIT;
-    
+
     extendedData = {
       ...extendedData,
       messageCount,
       messageLimit: GUEST_MESSAGE_LIMIT,
       messagesRemaining,
-      isRateLimited
+      isRateLimited,
     };
   }
-  
+
   return extendedData;
 }
 
@@ -109,29 +120,37 @@ export function clearSession(sessionId: string): void {
 }
 
 // Generate a fingerprint based on IP and user agent for guest users
-export async function generateGuestFingerprint(request: Request): Promise<string> {
-  const ip = request.headers.get("x-forwarded-for") || 
-             request.headers.get("x-real-ip") || 
-             "unknown";
+export async function generateGuestFingerprint(
+  request: Request,
+): Promise<string> {
+  const ip = request.headers.get("x-forwarded-for") ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
   const userAgent = request.headers.get("user-agent") || "unknown";
-  
+
   // Create a simple hash of IP + User Agent
   const data = `${ip}:${userAgent}`;
   const encoder = new TextEncoder();
-  const hashBuffer = await crypto.subtle.digest("SHA-256", encoder.encode(data));
+  const hashBuffer = await crypto.subtle.digest(
+    "SHA-256",
+    encoder.encode(data),
+  );
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hashHex = hashArray.map(byte => byte.toString(16).padStart(2, '0')).join('');
-  
+  const hashHex = hashArray.map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("");
+
   return `guest_${hashHex.substring(0, 16)}`;
 }
 
 // Create or get guest user and return session data
-export async function getOrCreateGuestUser(request: Request): Promise<{ user: User; sessionData: SessionData }> {
+export async function getOrCreateGuestUser(
+  request: Request,
+): Promise<{ user: User; sessionData: SessionData }> {
   const fingerprint = await generateGuestFingerprint(request);
-  
+
   // Check if guest user already exists
   let user = getUserByGuestId(fingerprint);
-  
+
   if (!user) {
     // Create new guest user
     const guestName = `Guest ${fingerprint.substring(6, 12)}`;
@@ -142,14 +161,14 @@ export async function getOrCreateGuestUser(request: Request): Promise<{ user: Us
       oauth_type: "guest",
     });
   }
-  
+
   const sessionData: SessionData = {
     userId: user.id,
     email: user.email,
     name: user.name,
-    oauth_type: "guest"
+    oauth_type: "guest",
   };
-  
+
   return { user, sessionData };
 }
 
@@ -160,20 +179,20 @@ export function canGuestSendMessage(userId: number): boolean {
 }
 
 // Get rate limit info for a guest user
-export function getGuestRateLimit(userId: number): { 
-  messageCount: number; 
-  messageLimit: number; 
-  messagesRemaining: number; 
-  isRateLimited: boolean; 
+export function getGuestRateLimit(userId: number): {
+  messageCount: number;
+  messageLimit: number;
+  messagesRemaining: number;
+  isRateLimited: boolean;
 } {
   const messageCount = countUserMessagesForUser(userId);
   const messagesRemaining = Math.max(0, GUEST_MESSAGE_LIMIT - messageCount);
   const isRateLimited = messageCount >= GUEST_MESSAGE_LIMIT;
-  
+
   return {
     messageCount,
     messageLimit: GUEST_MESSAGE_LIMIT,
     messagesRemaining,
-    isRateLimited
+    isRateLimited,
   };
-} 
+}

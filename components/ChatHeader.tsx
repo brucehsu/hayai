@@ -8,7 +8,9 @@ interface ChatHeaderProps {
   title?: string;
 }
 
-export default function ChatHeader({ currentThread, title }: ChatHeaderProps): JSX.Element {
+export default function ChatHeader(
+  { currentThread, title }: ChatHeaderProps,
+): JSX.Element {
   return (
     <div class="bg-white border-b border-gray-200 p-4">
       <div class="flex items-center justify-between">
@@ -18,7 +20,7 @@ export default function ChatHeader({ currentThread, title }: ChatHeaderProps): J
         {currentThread && (
           <form method="post" class="flex items-center gap-2">
             <label class="text-sm text-gray-600">Model:</label>
-            <select 
+            <select
               name="provider"
               class="border border-gray-300 rounded px-3 py-1 text-sm"
               value={currentThread.llm_provider}
@@ -35,4 +37,4 @@ export default function ChatHeader({ currentThread, title }: ChatHeaderProps): J
       </div>
     </div>
   );
-} 
+}
