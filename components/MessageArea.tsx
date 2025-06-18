@@ -47,26 +47,19 @@ export default function MessageArea({
                   class="h-16 w-auto"
                 />
               </div>
-              <p class="mb-6">
-                Start a new conversation or select an existing chat from the
-                sidebar
-              </p>
-              <Button
-                variant="green"
-                href="/chat/new"
-                class="inline-block px-6 py-3 rounded-lg"
-              >
-                Start New Chat
-              </Button>
             </div>
           </div>
         )
         : allMessages.length === 0 && !isStreaming
         ? (
           <div class="flex items-center justify-center h-full">
-            <div class="text-center text-gray-500">
-              <p>No messages yet. Start the conversation!</p>
-            </div>
+            <div class="flex justify-center mb-6">
+                <img 
+                  src="/logo.png" 
+                  alt="Hayai Logo" 
+                  class="h-16 w-auto"
+                />
+              </div>
           </div>
         )
         : (
