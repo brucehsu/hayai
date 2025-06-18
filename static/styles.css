@@ -2,7 +2,7 @@
 
 /* Custom color system */
 .bg-primary-bg {
-  background-color: #211E55;
+  background-color: #211e55;
 }
 
 .bg-create {
@@ -10,35 +10,35 @@
 }
 
 .bg-create:hover {
-  background-color: #00AA90;
+  background-color: #00aa90;
 }
 
 .bg-submit {
-  background-color: #4E4F97;
+  background-color: #4e4f97;
 }
 
 .bg-submit:hover {
-  background-color: #8A6BBE;
+  background-color: #8a6bbe;
 }
 
 .bg-cancel {
-  background-color: #C73E3A;
+  background-color: #c73e3a;
 }
 
 .bg-cancel:hover {
-  background-color: #D75455;
+  background-color: #d75455;
 }
 
 .bg-create-hover {
-  background-color: #00AA90;
+  background-color: #00aa90;
 }
 
 .bg-submit-hover {
-  background-color: #8A6BBE;
+  background-color: #8a6bbe;
 }
 
 .bg-cancel-hover {
-  background-color: #D75455;
+  background-color: #d75455;
 }
 
 /* Thread colors */
@@ -47,11 +47,11 @@
 }
 
 .bg-thread-selected {
-  background-color: #0D5661;
+  background-color: #0d5661;
 }
 
 .bg-user-message {
-  background-color: #4E4F97;
+  background-color: #4e4f97;
 }
 
 .hover\:bg-thread-hover:hover {
@@ -63,11 +63,11 @@
 }
 
 .focus\:ring-submit:focus {
-  --tw-ring-color: #4E4F97;
+  --tw-ring-color: #4e4f97;
 }
 
 .focus\:ring-cancel:focus {
-  --tw-ring-color: #C73E3A;
+  --tw-ring-color: #c73e3a;
 }
 
 /* Custom styles */
@@ -137,7 +137,7 @@
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
   font-size: 0.875rem;
-  font-family: 'Courier New', monospace;
+  font-family: "Courier New", monospace;
 }
 
 .markdown-content pre {

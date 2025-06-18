@@ -21,7 +21,7 @@ export default function Message({ message }: MessageProps): JSX.Element {
             : "bg-white text-gray-800 border border-gray-200"
         }`}
       >
-        <div 
+        <div
           class="text-sm markdown-content"
           dangerouslySetInnerHTML={{ __html: marked(message.content) }}
         />

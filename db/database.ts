@@ -234,7 +234,9 @@ export function deleteThreadByUuid(uuid: string): void {
 }
 
 export function makeThreadPublic(uuid: string): void {
-  const stmt = getDB().prepare("UPDATE threads SET public = TRUE WHERE uuid = ?");
+  const stmt = getDB().prepare(
+    "UPDATE threads SET public = TRUE WHERE uuid = ?",
+  );
   stmt.run(uuid);
 }
 

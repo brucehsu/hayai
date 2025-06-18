@@ -127,7 +127,8 @@ export const handler: Handlers<PageData> = {
       },
       threads,
       currentThread,
-      isOwner: currentThread && currentThread.user_id === extendedSession.userId,
+      isOwner: currentThread &&
+        currentThread.user_id === extendedSession.userId,
       error,
     });
   },
@@ -156,7 +157,10 @@ export const handler: Handlers<PageData> = {
 
     // Only thread owner can send messages
     if (currentThread.user_id !== extendedSession.userId) {
-      return new Response("Access denied - only thread owner can send messages", { status: 403 });
+      return new Response(
+        "Access denied - only thread owner can send messages",
+        { status: 403 },
+      );
     }
 
     const formData = await req.formData();
@@ -274,7 +278,8 @@ export const handler: Handlers<PageData> = {
       },
       threads,
       currentThread: updatedThread,
-      isOwner: updatedThread && updatedThread.user_id === extendedSession.userId,
+      isOwner: updatedThread &&
+        updatedThread.user_id === extendedSession.userId,
       error: undefined,
     });
   },

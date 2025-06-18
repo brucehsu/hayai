@@ -294,7 +294,11 @@ export default function ChatArea(
 
   return (
     <div class="flex-1 flex flex-col">
-      <ChatHeader currentThread={currentThread} title={threadTitle} isOwner={isOwner} />
+      <ChatHeader
+        currentThread={currentThread}
+        title={threadTitle}
+        isOwner={isOwner}
+      />
 
       <MessageArea
         error={error}

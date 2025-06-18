@@ -42,17 +42,7 @@ export default function MessageArea({
         : !currentThread
         ? <EmptyState />
         : allMessages.length === 0 && !isStreaming
-        ? (
-          <div class="flex items-center justify-center h-full">
-            <div class="flex justify-center mb-6">
-              <img
-                src="/logo.png"
-                alt="hayai Logo"
-                class="h-16 w-auto"
-              />
-            </div>
-          </div>
-        )
+        ? <EmptyState />
         : (
           <div class="space-y-4">
             {allMessages.map((message: any, index: number) => (
@@ -78,14 +68,12 @@ export default function MessageArea({
 function EmptyState(): JSX.Element {
   return (
     <div class="flex items-center justify-center h-full">
-      <div class="text-center text-gray-500">
-        <div class="flex justify-center mb-6">
-          <img
-            src="/logo.png"
-            alt="hayai Logo"
-            class="h-16 w-auto"
-          />
-        </div>
+      <div class="flex justify-center mb-6">
+        <img
+          src="/logo.png"
+          alt="hayai Logo"
+          class="h-16 w-auto"
+        />
       </div>
     </div>
   );

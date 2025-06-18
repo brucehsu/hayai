@@ -23,7 +23,9 @@ export default function ThreadList(
                 key={thread.id}
                 href={`/chat/${thread.uuid}`}
                 class={`block p-3 mb-2 rounded-md transition-colors ${
-                  isSelected ? "bg-thread-selected text-white" : "hover:bg-thread-hover"
+                  isSelected
+                    ? "bg-thread-selected text-white"
+                    : "hover:bg-thread-hover"
                 }`}
               >
                 <div class="font-medium text-sm truncate">

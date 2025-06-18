@@ -24,7 +24,12 @@ export default function ChatLayout(
   return (
     <div class="flex h-screen bg-gray-100">
       <Sidebar user={user} threads={threads} currentThread={currentThread} />
-      <ChatArea currentThread={currentThread} error={error} user={user} isOwner={isOwner} />
+      <ChatArea
+        currentThread={currentThread}
+        error={error}
+        user={user}
+        isOwner={isOwner}
+      />
     </div>
   );
 }
