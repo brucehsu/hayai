@@ -1,4 +1,4 @@
-# Hayai
+# hayai
 
 A full-stack AI chat web application built with Deno Fresh, featuring multiple
 AI model support through a universal client interface, user authentication, and

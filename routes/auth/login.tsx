@@ -25,7 +25,7 @@ export default function Login() {
   return (
     <div class="min-h-screen bg-gray-100 flex items-center justify-center">
       <div class="bg-white p-8 rounded-lg shadow-md w-96">
-        <h1 class="text-2xl font-bold text-center mb-6">Hayai</h1>
+        <h1 class="text-2xl font-bold text-center mb-6">hayai</h1>
         <p class="text-gray-600 text-center mb-6">
           Sign in with your Google account to start chatting with AI assistants
         </p>

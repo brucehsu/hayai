@@ -43,7 +43,7 @@ export default function MessageArea({
               <div class="flex justify-center mb-6">
                 <img 
                   src="/logo.png" 
-                  alt="Hayai Logo" 
+                  alt="hayai Logo" 
                   class="h-16 w-auto"
                 />
               </div>
@@ -56,7 +56,7 @@ export default function MessageArea({
             <div class="flex justify-center mb-6">
                 <img 
                   src="/logo.png" 
-                  alt="Hayai Logo" 
+                  alt="hayai Logo" 
                   class="h-16 w-auto"
                 />
               </div>

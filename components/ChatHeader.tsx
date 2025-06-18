@@ -15,7 +15,7 @@ export default function ChatHeader(
     <div class="bg-white border-b border-gray-200 p-4">
       <div class="flex items-center justify-between">
         <h2 class="text-lg font-semibold">
-          {title || (currentThread ? currentThread.title : "Hayai")}
+          {title || (currentThread ? currentThread.title : "hayai")}
         </h2>
         {currentThread && (
           <form method="post" class="flex items-center gap-2">
@@ -32,7 +32,7 @@ export default function ChatHeader(
             </select>
             <img 
               src="/logo.png" 
-              alt="Hayai Logo" 
+              alt="hayai Logo" 
               class="h-8 w-auto mr-2"
             />
             <input type="hidden" name="message" value="" />
