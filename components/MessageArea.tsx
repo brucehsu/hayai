@@ -1,4 +1,5 @@
 import { JSX } from "preact";
+import { useEffect, useRef } from "preact/hooks";
 import Message from "./Message.tsx";
 import Button from "./Button.tsx";
 
@@ -19,8 +20,23 @@ export default function MessageArea({
   isSubmitting,
   streamingMessage,
 }: MessageAreaProps): JSX.Element {
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
+
+  // Auto-scroll to bottom when messages change or when streaming
+  useEffect(() => {
+    if (scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTo({
+        top: scrollContainerRef.current.scrollHeight,
+        behavior: 'smooth'
+      });
+    }
+  }, [allMessages.length, streamingMessage, isStreaming, isSubmitting]);
+
   return (
-    <div class="flex-1 overflow-y-auto p-4 bg-gray-50">
+    <div 
+      ref={scrollContainerRef}
+      class="flex-1 overflow-y-auto p-4 bg-gray-50"
+    >
       {error
         ? (
           <div class="flex items-center justify-center h-full">
