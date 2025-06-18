@@ -68,18 +68,14 @@ export default function MessageArea({
               <Message key={index} message={message} />
             ))}
             {(isSubmitting || isStreaming) && currentThread && (
-              <div class="flex justify-start">
-                <div class="max-w-xs lg:max-w-md px-4 py-2 rounded-lg bg-white text-gray-800 border border-gray-200">
-                  {isStreaming && streamingMessage
-                    ? (
-                      <div class="text-sm whitespace-pre-wrap">
-                        {streamingMessage}
-                        <span class="animate-pulse">|</span>
-                      </div>
-                    )
-                    : <p class="text-sm text-gray-500">Thinking...</p>}
-                </div>
-              </div>
+              <Message
+                message={{
+                  type: "assistant",
+                  content: isStreaming && streamingMessage
+                    ? `${streamingMessage}<span class="animate-pulse">|</span>`
+                    : "Thinking...",
+                }}
+              />
             )}
           </div>
         )}

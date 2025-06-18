@@ -5,7 +5,7 @@ interface MessageProps {
   message: {
     type: string;
     content: string;
-    timestamp: string;
+    timestamp?: string;
   };
 }
 
@@ -25,9 +25,11 @@ export default function Message({ message }: MessageProps): JSX.Element {
           class="text-sm markdown-content"
           dangerouslySetInnerHTML={{ __html: marked(message.content) }}
         />
-        <p class="text-xs mt-1 opacity-70 text-right">
-          {new Date(message.timestamp).toLocaleTimeString()}
-        </p>
+        {message.timestamp && (
+          <p class="text-xs mt-1 opacity-70 text-right">
+            {new Date(message.timestamp).toLocaleTimeString()}
+          </p>
+        )}
       </div>
     </div>
   );
