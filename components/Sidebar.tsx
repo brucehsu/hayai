@@ -60,7 +60,7 @@ export default function Sidebar({ user, threads, currentThread }: SidebarProps):
       <div class="p-4">
         <a
           href="/chat/new"
-          class="w-full bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center"
+          class="w-full bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md text-sm font-medium transition-colors flex items-center justify-center"
         >
           + New Chat
         </a>
