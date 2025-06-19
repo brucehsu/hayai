@@ -87,6 +87,11 @@ export const handler: Handlers<PageData> = {
 
 export default function Home({ data }: PageProps<PageData>) {
   return (
-    <ChatLayout user={data.user} threads={data.threads} currentThread={null} />
+    <ChatLayout
+      user={data.user}
+      threads={data.threads}
+      currentThread={null}
+      isOwner={false}
+    />
   );
 }

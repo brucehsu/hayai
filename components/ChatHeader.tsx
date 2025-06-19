@@ -93,7 +93,6 @@ export default function ChatHeader(
               onClick={handleSummarise}
               class="px-4 py-2 flex items-center gap-2 summarise-button"
             >
-              
               <span>Summarise</span>
               <Icon type="summarise" />
               <span>Messages</span>

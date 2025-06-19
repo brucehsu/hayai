@@ -85,7 +85,9 @@ export function initDB() {
 
   // Add llm_model_version column if it doesn't exist (for existing databases)
   try {
-    db.exec(`ALTER TABLE threads ADD COLUMN llm_model_version TEXT NOT NULL DEFAULT ''`);
+    db.exec(
+      `ALTER TABLE threads ADD COLUMN llm_model_version TEXT NOT NULL DEFAULT ''`,
+    );
   } catch {
     // Column already exists or other error, ignore
   }
@@ -118,7 +120,9 @@ export function initDB() {
       "UPDATE threads SET llm_model_version = 'gemini-2.5-flash' WHERE llm_provider = 'google' AND (llm_model_version = '' OR llm_model_version IS NULL)",
     ).run();
 
-    console.log(`Migrated ${threadsWithEmptyModelVersion.count} threads with llm_model_version`);
+    console.log(
+      `Migrated ${threadsWithEmptyModelVersion.count} threads with llm_model_version`,
+    );
   }
 
   // Create trigger to update updated_at timestamp
@@ -159,36 +163,36 @@ export function createUser(
     user.avatar_url || null,
     user.oauth_id,
     user.oauth_type,
-  );
+  ) as unknown;
   return result as User;
 }
 
 export function getUserByOAuthId(oauthId: string): User | null {
   const stmt = getDB().prepare("SELECT * FROM users WHERE oauth_id = ?");
-  const result = stmt.get(oauthId);
-  return result as User || null;
+  const result = stmt.get(oauthId) as unknown;
+  return (result as User) || null;
 }
 
 export function getUserByGoogleId(googleId: string): User | null {
   const stmt = getDB().prepare(
     "SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'google'",
   );
-  const result = stmt.get(googleId);
-  return result as User || null;
+  const result = stmt.get(googleId) as unknown;
+  return (result as User) || null;
 }
 
 export function getUserByGuestId(guestId: string): User | null {
   const stmt = getDB().prepare(
     "SELECT * FROM users WHERE oauth_id = ? AND oauth_type = 'guest'",
   );
-  const result = stmt.get(guestId);
-  return result as User || null;
+  const result = stmt.get(guestId) as unknown;
+  return (result as User) || null;
 }
 
 export function getUserById(id: number): User | null {
   const stmt = getDB().prepare("SELECT * FROM users WHERE id = ?");
-  const result = stmt.get(id);
-  return result as User || null;
+  const result = stmt.get(id) as unknown;
+  return (result as User) || null;
 }
 
 // Thread operations
@@ -207,7 +211,7 @@ export function createThread(
     thread.llm_provider,
     thread.llm_model_version,
     thread.public || false,
-  );
+  ) as unknown;
   return result as Thread;
 }
 
@@ -215,25 +219,27 @@ export function getThreadsByUserId(userId: number): Thread[] {
   const stmt = getDB().prepare(
     "SELECT * FROM threads WHERE user_id = ? ORDER BY updated_at DESC",
   );
-  const result = stmt.all(userId);
+  const result = stmt.all(userId) as unknown;
   return result as Thread[];
 }
 
 export function getThreadById(id: number): Thread | null {
   const stmt = getDB().prepare("SELECT * FROM threads WHERE id = ?");
-  const result = stmt.get(id);
-  return result as Thread || null;
+  const result = stmt.get(id) as unknown;
+  return (result as Thread) || null;
 }
 
 export function getThreadByUuid(uuid: string): Thread | null {
   const stmt = getDB().prepare("SELECT * FROM threads WHERE uuid = ?");
-  const result = stmt.get(uuid);
-  return result as Thread || null;
+  const result = stmt.get(uuid) as unknown;
+  return (result as Thread) || null;
 }
 
 export function updateThread(
   id: number,
-  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider" | "llm_model_version">>,
+  updates: Partial<
+    Pick<Thread, "title" | "messages" | "llm_provider" | "llm_model_version">
+  >,
 ): void {
   const setClause = Object.keys(updates).map((key) => `${key} = ?`).join(", ");
   const values = Object.values(updates);
@@ -244,7 +250,9 @@ export function updateThread(
 
 export function updateThreadByUuid(
   uuid: string,
-  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider" | "llm_model_version">>,
+  updates: Partial<
+    Pick<Thread, "title" | "messages" | "llm_provider" | "llm_model_version">
+  >,
 ): void {
   const setClause = Object.keys(updates).map((key) => `${key} = ?`).join(", ");
   const values = Object.values(updates);
@@ -277,7 +285,7 @@ export function countUserMessagesForUser(userId: number): number {
   const stmt = getDB().prepare(
     "SELECT messages FROM threads WHERE user_id = ?",
   );
-  const threads = stmt.all(userId) as Thread[];
+  const threads = stmt.all(userId) as unknown as Thread[];
 
   let totalUserMessages = 0;
 

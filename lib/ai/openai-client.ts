@@ -92,7 +92,9 @@ export class OpenAIClient implements AIClient {
       }
 
       throw new CustomAIError(
-        `OpenAI API error: ${error.message}`,
+        `OpenAI API error: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
         this.provider,
       );
     }
@@ -194,7 +196,9 @@ export class OpenAIClient implements AIClient {
       }
 
       throw new CustomAIError(
-        `OpenAI API streaming error: ${error.message}`,
+        `OpenAI API streaming error: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
         this.provider,
       );
     }

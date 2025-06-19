@@ -195,7 +195,7 @@
 }
 
 .summarise-icon .arrow-bottom {
-  transform: translateY(-6px)  translateX(4px);
+  transform: translateY(-6px) translateX(4px);
 }
 
 .summarise-icon:hover .arrow-top {

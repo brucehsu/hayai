@@ -9,7 +9,7 @@ const marked = new Marked(
   markedHighlight({
     emptyLangClass: "hljs",
     langPrefix: "hljs language-",
-    highlight(code, lang, info) {
+    highlight(code: string, lang: string, info: string) {
       const language = hljs.getLanguage(lang) ? lang : "plaintext";
       return hljs.highlight(code, { language }).value;
     },
@@ -46,7 +46,7 @@ export default function Message({ message }: MessageProps): JSX.Element {
             <div
               class="text-sm markdown-content"
               dangerouslySetInnerHTML={{
-                __html: marked.parse(message.content),
+                __html: marked.parse(message.content) as string,
               }}
             />
           )}

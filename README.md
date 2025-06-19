@@ -88,13 +88,16 @@ deno task start
 The application will be available at http://localhost:8000
 
 ## Development
-See [DEVELOPMENT.md](DEVELOPMENT.md) for 
+
+See [DEVELOPMENT.md](DEVELOPMENT.md) for
+
 - Project structure
 - Database design
 - Implementation details
 - etc
 
 ## Deployment
+
 See [DEPLOYMENT.md](DEPLOYMENT.md).
 
 ## Contributing
@@ -106,7 +109,9 @@ The project follows standard Deno and Fresh conventions:
 - TypeScript strict mode is enabled
 - All AI clients must implement the `AIClient` interface
 
-Using LLM to assist your development is encouraged. Just remember to attach the prompts you used in the commit message to give other contributors context, even though you may have manually changed something in the same commit.
+Using LLM to assist your development is encouraged. Just remember to attach the
+prompts you used in the commit message to give other contributors context, even
+though you may have manually changed something in the same commit.
 
 ## TODO
 

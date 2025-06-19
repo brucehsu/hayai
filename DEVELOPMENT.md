@@ -7,7 +7,6 @@
 - **Styling**: Tailwind CSS (via Twind)
 - **AI Integration**: Universal client interface supporting multiple providers
 
-
 # Project Structure
 
 ```
@@ -109,7 +108,6 @@ The application features a sophisticated AI client system that provides:
 - **Features**: Chat completion with message format conversion
 - **Configuration**: Requires `GEMINI_API_KEY`
 - **Note**: System messages converted to user messages with "System:" prefix
-
 
 ### Available Tasks
 

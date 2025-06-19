@@ -140,7 +140,7 @@ export const handler: Handlers<PageData> = {
 
     // Create empty thread with placeholder title
     const llm_model_version = getModelVersionFromProvider(provider);
-    
+
     const newThread = createThread({
       user_id: extendedSession.userId,
       title: "New Conversation", // Placeholder title
@@ -166,6 +166,7 @@ export default function NewChat({ data }: PageProps<PageData>) {
       user={data.user}
       threads={data.threads}
       currentThread={data.currentThread}
+      isOwner={false}
     />
   );
 }

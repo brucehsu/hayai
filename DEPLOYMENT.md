@@ -1,4 +1,3 @@
-
 ## Production Deployment
 
 ### Environment Setup
@@ -14,7 +13,8 @@
 - **Docker**: Use official Deno Docker images
 - **VPS**: Direct deployment with systemd service
 
-This repo has been set up to use Fly.io for deployment. The configuration is in the `fly.toml` file. See [Fly.io](https://fly.io) for more information.
+This repo has been set up to use Fly.io for deployment. The configuration is in
+the `fly.toml` file. See [Fly.io](https://fly.io) for more information.
 
 ### Performance Considerations
 

@@ -128,8 +128,10 @@ export const handler: Handlers<PageData> = {
       },
       threads,
       currentThread,
-      isOwner: currentThread &&
-        currentThread.user_id === extendedSession.userId,
+      isOwner: Boolean(
+        currentThread &&
+          currentThread.user_id === extendedSession.userId,
+      ),
       error,
     });
   },
@@ -243,7 +245,8 @@ export const handler: Handlers<PageData> = {
       } catch (error) {
         console.error("AI API Error:", error);
         aiContent = `Sorry, I encountered an error with ${provider}. ${
-          error.message || "Please try again later."
+          (error instanceof Error ? error.message : String(error)) ||
+          "Please try again later."
         }`;
       }
     }
@@ -258,7 +261,7 @@ export const handler: Handlers<PageData> = {
 
     // Update thread
     const llm_model_version = getModelVersionFromProvider(provider);
-    
+
     updateThreadByUuid(threadUuid, {
       messages: JSON.stringify(messages),
       llm_provider: provider,
@@ -282,8 +285,10 @@ export const handler: Handlers<PageData> = {
       },
       threads,
       currentThread: updatedThread,
-      isOwner: updatedThread &&
-        updatedThread.user_id === extendedSession.userId,
+      isOwner: Boolean(
+        updatedThread &&
+          updatedThread.user_id === extendedSession.userId,
+      ),
       error: undefined,
     });
   },

@@ -15,14 +15,14 @@ export function getModelDisplayNameFromThread(thread: {
   if (thread.llm_model_version) {
     return getModelDisplayName(thread.llm_model_version);
   }
-  
+
   // Fallback for threads that don't have llm_model_version yet
   if (thread.llm_provider === "openai") {
     return "GPT-4o";
   } else if (thread.llm_provider === "google") {
     return "Gemini 2.5 Flash";
   }
-  
+
   return "Unknown Model";
 }
 
@@ -33,4 +33,4 @@ export function getModelVersionFromProvider(provider: string): string {
     return "gemini-2.5-flash";
   }
   return "";
-} 
+}

@@ -4,7 +4,7 @@ type ButtonVariant = "create" | "submit" | "cancel" | "google" | "outline";
 
 interface ButtonProps {
   variant: ButtonVariant;
-  children: JSX.Element | string;
+  children: JSX.Element | JSX.Element[] | string;
   href?: string;
   type?: "button" | "submit" | "reset";
   disabled?: boolean;

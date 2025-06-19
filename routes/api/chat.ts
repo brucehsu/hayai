@@ -3,7 +3,7 @@ import { AIMessage, AIProvider } from "../../lib/ai/types.ts";
 import { updateThreadByUuid } from "../../db/database.ts";
 
 export const handler = {
-  async POST(req: Request, _ctx) {
+  async POST(req: Request, _ctx: any) {
     const url = new URL(req.url);
     const isStreaming = url.searchParams.get("stream") === "true";
     const isUpdateTitle = url.searchParams.get("updateTitle") === "true";
@@ -75,7 +75,7 @@ export const handler = {
 
       return new Response(
         JSON.stringify({
-          error: error.message ||
+          error: (error instanceof Error ? error.message : String(error)) ||
             "An error occurred while processing the chat request",
           success: false,
         }),
@@ -87,7 +87,7 @@ export const handler = {
     }
   },
 
-  async GET(_req: Request, _ctx) {
+  async GET(_req: Request, _ctx: any) {
     try {
       const availableProviders = aiManager.getAvailableProviders();
       const providersInfo = availableProviders.map((provider) => ({
@@ -191,7 +191,8 @@ async function handleStreamingRequest(req: Request): Promise<Response> {
           console.error("Streaming error:", error);
           const errorData = JSON.stringify({
             type: "error",
-            error: error.message || "An error occurred during streaming",
+            error: (error instanceof Error ? error.message : String(error)) ||
+              "An error occurred during streaming",
           });
           controller.enqueue(encoder.encode(`data: ${errorData}\n\n`));
         } finally {
@@ -214,7 +215,7 @@ async function handleStreamingRequest(req: Request): Promise<Response> {
 
     return new Response(
       JSON.stringify({
-        error: error.message ||
+        error: (error instanceof Error ? error.message : String(error)) ||
           "An error occurred while processing the streaming request",
         success: false,
       }),
@@ -281,7 +282,7 @@ async function handleTitleUpdateRequest(req: Request): Promise<Response> {
 
     return new Response(
       JSON.stringify({
-        error: error.message ||
+        error: (error instanceof Error ? error.message : String(error)) ||
           "An error occurred while updating the thread title",
         success: false,
       }),

@@ -95,7 +95,9 @@ export class GeminiClient implements AIClient {
       }
 
       throw new GeminiAIError(
-        `Gemini API error: ${error.message}`,
+        `Gemini API error: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
         this.provider,
       );
     }
@@ -277,7 +279,9 @@ export class GeminiClient implements AIClient {
       }
 
       throw new GeminiAIError(
-        `Gemini API streaming error: ${error.message}`,
+        `Gemini API streaming error: ${
+          error instanceof Error ? error.message : String(error)
+        }`,
         this.provider,
       );
     }
