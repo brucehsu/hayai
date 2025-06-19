@@ -93,23 +93,12 @@ export default function Sidebar(
       {/* Threads List */}
       <div class="flex-1 overflow-y-auto">
         <div class="p-2">
-          {user && user.isLoggedIn
-            ? (
-              <ThreadList
-                threads={threads}
-                title="Your Chats"
-                emptyMessage="No saved chats yet"
-                currentThreadId={currentThread?.uuid}
-              />
-            )
-            : (
-              <ThreadList
-                threads={threads}
-                title="Recent Chats"
-                emptyMessage="No chats yet"
-                currentThreadId={currentThread?.uuid}
-              />
-            )}
+          <ThreadList
+            threads={threads}
+            title="Your Chats"
+            emptyMessage="What's on your mind today?"
+            currentThreadId={currentThread?.uuid}
+          />
         </div>
       </div>
 
