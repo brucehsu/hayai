@@ -3,7 +3,7 @@ import { AIMessage } from "../../lib/ai/types.ts";
 import { getExtendedSessionFromRequest } from "../../utils/session.ts";
 import { getThreadByUuid, updateThreadByUuid, Thread } from "../../db/database.ts";
 
-interface MessageToSummarize {
+interface Message {
   type: string;
   content: string;
   timestamp: string;
@@ -11,6 +11,7 @@ interface MessageToSummarize {
 }
 
 interface SummarizedMessage {
+  type: string;
   summary: string;
   timestamp: string;
 }
@@ -60,9 +61,9 @@ export const handler = {
       }
 
       // Parse messages from thread
-      let messages: MessageToSummarize[];
+      let allMessages: Message[];
       try {
-        messages = JSON.parse(thread.messages);
+        allMessages = JSON.parse(thread.messages);
       } catch (error) {
         return new Response(
           JSON.stringify({ error: "Invalid thread messages format" }),
@@ -73,7 +74,7 @@ export const handler = {
         );
       }
 
-      if (!Array.isArray(messages) || messages.length === 0) {
+      if (!Array.isArray(allMessages) || allMessages.length === 0) {
         return new Response(
           JSON.stringify({ 
             success: true, 
@@ -99,14 +100,13 @@ Given a JSON array in the following format:
 You should return a new JSON array that follows the following format:
 
 \`\`\`json
-[{"content": "ORIGINAL-CONTENT", "summary": "SUMMARY-IN-200CHARS-OR-ORIGINAL-CONTENT-IN-200CHARS", "timestamp": "ORIGINAL-ISO8601-DATETIME-STRING }]
+[{"summary": "SUMMARY-IN-200CHARS-OR-ORIGINAL-CONTENT-IN-200CHARS", "timestamp": "ORIGINAL-ISO8601-DATETIME-STRING", "type": "ORIGINAL-TYPE" }]
 \`\`\`
 
 YOU NEED TO STRICTLY FOLLOW THE INSTRUCTIONS BELOW:
 
-Going through each entry's \`"content"\` field,
-- If the original entry's  \`"content"\` is <= 200 characters then maps \`"content"\` in the \`"summary"\` field, DO NOT mutate or summarise it.
-- If the original entry's  \`"content"\` is > 200 characters then summarise \`"content"\` in the original language it was written in, 
+Going through each entry's \`"content"\` field:
+If the original entry's  \`"content"\` is > 200 characters then summarise \`"content"\` in the original language it was written in, 
 with the important information of the content and its context in mind,
 make it more than 80 characters but within 200 characters, maps it to the \`"summary"\` field.
 
@@ -116,7 +116,7 @@ DO NOT summarise  the \`"content"\` IF it's already within 200 characters.
 
 Here's the array to process:
 \`\`\`json
-${JSON.stringify(messages)}
+${JSON.stringify(allMessages.filter((message: Message) => message.content.length > 200))}
 \`\`\``;
 
       // Prepare messages for AI
@@ -164,7 +164,6 @@ ${JSON.stringify(messages)}
       let summaries: SummarizedMessage[];
       try {
         // Extract JSON from the response (in case it's wrapped in markdown)
-        console.log(aiResponse.content);
         const jsonMatch = aiResponse.content.match(/\[[\s\S]*\]/);
         const jsonString = jsonMatch ? jsonMatch[0] : aiResponse.content;
         summaries = JSON.parse(jsonString);
@@ -197,21 +196,25 @@ ${JSON.stringify(messages)}
       // Create a map for quick lookup of summaries by timestamp
       const summaryMap = new Map<string, string>();
       summaries.forEach((summary) => {
-        if (summary.timestamp && summary.summary) {
-          summaryMap.set(summary.timestamp, summary.summary);
+        const {summary: summaryText, type, timestamp} = summary;
+        if (type && timestamp && summaryText) {
+          summaryMap.set(`${type}-${timestamp}`, summaryText);
         }
       });
 
       // Merge summaries back to original messages
-      const updatedMessages = messages.map((message) => {
-        const summary = summaryMap.get(message.timestamp);
+      const updatedMessages = allMessages.map((message) => {
+        const summary = summaryMap.get(`${message.type}-${message.timestamp}`) ?? message.content;
         if (summary) {
           return {
             ...message,
-            summary: summary,
+            summary,
           };
         }
-        return message;
+        return {
+            ...message,
+            summary: message.content,
+        };
       });
 
       // Update the thread in database
