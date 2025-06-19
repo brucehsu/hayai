@@ -1,6 +1,6 @@
 import { JSX } from "preact";
 
-type ButtonVariant = "create" | "submit" | "cancel" | "google";
+type ButtonVariant = "create" | "submit" | "cancel" | "google" | "outline";
 
 interface ButtonProps {
   variant: ButtonVariant;
@@ -9,6 +9,7 @@ interface ButtonProps {
   type?: "button" | "submit" | "reset";
   disabled?: boolean;
   class?: string;
+  id?: string;
   onClick?: (e: Event) => void;
 }
 
@@ -33,6 +34,8 @@ const getButtonStyles = (
     case "google":
       // Keep Google button styling unchanged
       return `${baseStyles} bg-blue-600 hover:bg-blue-700 text-white focus:ring-blue-500`;
+    case "outline":
+      return `${baseStyles} border border-gray-600 text-gray-600 hover:text-gray-800 hover:bg-gray-100 focus:ring-gray-500`;
     default:
       return `${baseStyles} bg-gray-600 hover:bg-gray-700 text-white focus:ring-gray-500`;
   }
@@ -45,6 +48,7 @@ export default function Button({
   type = "button",
   disabled = false,
   class: additionalClass = "",
+  id,
   onClick,
 }: ButtonProps): JSX.Element {
   const buttonStyles = `${
@@ -53,7 +57,7 @@ export default function Button({
 
   if (href) {
     return (
-      <a href={href} class={buttonStyles}>
+      <a href={href} class={buttonStyles} id={id}>
         {children}
       </a>
     );
@@ -64,6 +68,7 @@ export default function Button({
       type={type}
       class={buttonStyles}
       disabled={disabled}
+      id={id}
       onClick={onClick}
     >
       {children}

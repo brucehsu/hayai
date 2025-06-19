@@ -1,5 +1,6 @@
 import { JSX } from "preact";
 import Badge from "./Badge.tsx";
+import Button from "./Button.tsx";
 
 interface ChatHeaderProps {
   currentThread?: {
@@ -60,16 +61,16 @@ export default function ChatHeader(
             {title || (currentThread ? currentThread.title : "hayai")}
           </h2>
           {currentThread && isOwner && !Boolean(currentThread.public) && (
-            <button
-              id="share-button"
+            <Button
+              variant="outline"
               type="button"
               onClick={handleShare}
-              class="p-1 text-gray-600 hover:text-gray-800 hover:bg-gray-100 rounded transition-colors"
-              title="Share thread"
+              class="px-3 py-2"
+              id="share-button"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                class="h-4 w-4"
+                class="w-5 h-5"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -81,7 +82,7 @@ export default function ChatHeader(
                   d="M8.684 13.342C8.886 12.938 9 12.482 9 12c0-.482-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.316a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z"
                 />
               </svg>
-            </button>
+            </Button>
           )}
           {currentThread && Boolean(currentThread.public) && (
             <Badge variant="green">Public</Badge>
