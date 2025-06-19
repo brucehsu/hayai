@@ -1,4 +1,5 @@
 @import url("https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css");
+@import url("https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/github.min.css");
 
 /* Custom color system */
 .bg-primary-bg {
@@ -132,7 +133,7 @@
   margin-bottom: 0.25rem;
 }
 
-.markdown-content code {
+.markdown-content code:not(.hljs) {
   background-color: rgb(243, 244, 246);
   padding: 0.125rem 0.25rem;
   border-radius: 0.25rem;
@@ -141,21 +142,25 @@
 }
 
 .markdown-content pre {
-  background-color: rgb(243, 244, 246);
-  padding: 1rem;
-  border-radius: 0.5rem;
-  overflow-x: auto;
   margin-top: 0.5rem;
   margin-bottom: 0.5rem;
   width: 0;
   min-width: 100%;
   max-width: 100%;
   box-sizing: border-box;
+  border-radius: 0.5rem;
+  overflow-x: auto;
 }
 
-.markdown-content pre code {
-  background-color: transparent;
-  padding: 0;
+.markdown-content pre code.hljs {
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background-color: #f8f8f8;
+  font-family: "Courier New", monospace;
+  font-size: 0.875rem;
+  line-height: 1.4;
+  display: block;
+  overflow-x: auto;
 }
 
 .markdown-content blockquote {

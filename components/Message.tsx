@@ -1,6 +1,20 @@
 import { JSX } from "preact";
-import { marked } from "marked";
+import { Marked } from "marked";
+import { markedHighlight } from "marked-highlight";
+import hljs from "highlight.js";
 import Spinner from "./Spinner.tsx";
+
+// Configure marked with syntax highlighting
+const marked = new Marked(
+  markedHighlight({
+    emptyLangClass: "hljs",
+    langPrefix: "hljs language-",
+    highlight(code, lang, info) {
+      const language = hljs.getLanguage(lang) ? lang : "plaintext";
+      return hljs.highlight(code, { language }).value;
+    },
+  }),
+);
 
 interface MessageProps {
   message: {
@@ -31,7 +45,9 @@ export default function Message({ message }: MessageProps): JSX.Element {
           : (
             <div
               class="text-sm markdown-content"
-              dangerouslySetInnerHTML={{ __html: marked(message.content) }}
+              dangerouslySetInnerHTML={{
+                __html: marked.parse(message.content),
+              }}
             />
           )}
         {message.timestamp && (
