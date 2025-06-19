@@ -245,12 +245,12 @@ async function handleTitleUpdateRequest(req: Request): Promise<Response> {
       (message.length > 50 ? "..." : ""); // fallback
 
     try {
-      if (aiManager.isProviderAvailable("gemini")) {
+      if (aiManager.isProviderAvailable("google")) {
         const titlePrompt =
           `Given this message "${message}" and the language it's written in, give me a 40-character overview as title without any formatting.`;
         const titleResponse = await aiManager.chat(
           [{ role: "user", content: titlePrompt }] as AIMessage[],
-          "gemini",
+          "google",
           {
             model: "gemini-2.5-flash-lite-preview-06-17",
           },

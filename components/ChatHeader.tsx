@@ -2,12 +2,14 @@ import { JSX } from "preact";
 import Badge from "./Badge.tsx";
 import Button from "./Button.tsx";
 import Icon from "./Icon.tsx";
+import { getModelDisplayNameFromThread } from "../utils/model-mapping.ts";
 
 interface ChatHeaderProps {
   currentThread?: {
     uuid: string;
     title: string;
     llm_provider: string;
+    llm_model_version?: string;
     public: boolean;
     user_id: number;
   } | null;
@@ -102,9 +104,7 @@ export default function ChatHeader(
         {currentThread && (
           <div class="flex items-center gap-2">
             <Badge variant="blue">
-              {currentThread.llm_provider === "openai"
-                ? "OpenAI GPT-4o"
-                : "Google Gemini 2.5 Flash"}
+              {getModelDisplayNameFromThread(currentThread)}
             </Badge>
             <img
               src="/logo.png"

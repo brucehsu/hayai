@@ -18,6 +18,7 @@ export interface Thread {
   title: string;
   messages: string; // JSON string
   llm_provider: string;
+  llm_model_version: string;
   public: boolean;
   created_at: string;
   updated_at: string;
@@ -60,6 +61,7 @@ export function initDB() {
       title TEXT NOT NULL,
       messages TEXT DEFAULT '[]',
       llm_provider TEXT DEFAULT 'openai',
+      llm_model_version TEXT NOT NULL DEFAULT '',
       public BOOLEAN DEFAULT FALSE,
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
@@ -81,6 +83,13 @@ export function initDB() {
     // Column already exists or other error, ignore
   }
 
+  // Add llm_model_version column if it doesn't exist (for existing databases)
+  try {
+    db.exec(`ALTER TABLE threads ADD COLUMN llm_model_version TEXT NOT NULL DEFAULT ''`);
+  } catch {
+    // Column already exists or other error, ignore
+  }
+
   // Update existing threads that don't have UUIDs
   const threadsWithoutUuid = db.prepare(
     "SELECT id FROM threads WHERE uuid IS NULL",
@@ -88,6 +97,28 @@ export function initDB() {
   for (const thread of threadsWithoutUuid) {
     const uuid = crypto.randomUUID();
     db.prepare("UPDATE threads SET uuid = ? WHERE id = ?").run(uuid, thread.id);
+  }
+
+  // Migration: Update llm_model_version for existing threads with empty values
+  const threadsWithEmptyModelVersion = db.prepare(
+    "SELECT COUNT(*) as count FROM threads WHERE llm_model_version = '' OR llm_model_version IS NULL",
+  ).get() as { count: number };
+
+  if (threadsWithEmptyModelVersion.count > 0) {
+    // Update OpenAI threads
+    db.prepare(
+      "UPDATE threads SET llm_model_version = 'gpt-4o-2024-08-06' WHERE llm_provider = 'openai' AND (llm_model_version = '' OR llm_model_version IS NULL)",
+    ).run();
+
+    // Update Google/Gemini threads
+    db.prepare(
+      "UPDATE threads SET llm_provider = 'google' WHERE llm_provider = 'gemini'",
+    ).run();
+    db.prepare(
+      "UPDATE threads SET llm_model_version = 'gemini-2.5-flash' WHERE llm_provider = 'google' AND (llm_model_version = '' OR llm_model_version IS NULL)",
+    ).run();
+
+    console.log(`Migrated ${threadsWithEmptyModelVersion.count} threads with llm_model_version`);
   }
 
   // Create trigger to update updated_at timestamp
@@ -166,7 +197,7 @@ export function createThread(
 ): Thread {
   const uuid = crypto.randomUUID();
   const stmt = getDB().prepare(
-    "INSERT INTO threads (uuid, user_id, title, messages, llm_provider, public) VALUES (?, ?, ?, ?, ?, ?) RETURNING *",
+    "INSERT INTO threads (uuid, user_id, title, messages, llm_provider, llm_model_version, public) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *",
   );
   const result = stmt.get(
     uuid,
@@ -174,6 +205,7 @@ export function createThread(
     thread.title,
     thread.messages,
     thread.llm_provider,
+    thread.llm_model_version,
     thread.public || false,
   );
   return result as Thread;
@@ -201,7 +233,7 @@ export function getThreadByUuid(uuid: string): Thread | null {
 
 export function updateThread(
   id: number,
-  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>,
+  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider" | "llm_model_version">>,
 ): void {
   const setClause = Object.keys(updates).map((key) => `${key} = ?`).join(", ");
   const values = Object.values(updates);
@@ -212,7 +244,7 @@ export function updateThread(
 
 export function updateThreadByUuid(
   uuid: string,
-  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider">>,
+  updates: Partial<Pick<Thread, "title" | "messages" | "llm_provider" | "llm_model_version">>,
 ): void {
   const setClause = Object.keys(updates).map((key) => `${key} = ?`).join(", ");
   const values = Object.values(updates);

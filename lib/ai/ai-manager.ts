@@ -28,7 +28,7 @@ export class AIManager {
     // Initialize Gemini client
     const geminiKey = globalThis.Deno?.env.get("GEMINI_API_KEY");
     if (geminiKey) {
-      this.clients.set("gemini", new GeminiClient({ apiKey: geminiKey }));
+      this.clients.set("google", new GeminiClient({ apiKey: geminiKey }));
     }
   }
 
@@ -127,7 +127,7 @@ export class AIManager {
     switch (provider) {
       case "openai":
         return "OpenAI GPT-4o";
-      case "gemini":
+      case "google":
         return "Google Gemini 2.5 Flash";
       default:
         return provider;
@@ -141,7 +141,7 @@ export class AIManager {
     switch (provider) {
       case "openai":
         return ["gpt-4o-2024-08-06", "gpt-4", "gpt-4-turbo", "gpt-3.5-turbo"];
-      case "gemini":
+      case "google":
         return [
           "gemini-2.5-flash",
           "gemini-1.5-flash",
@@ -168,7 +168,7 @@ export function normalizeProvider(provider: string): AIProvider {
       return "openai";
     case "gemini":
     case "google":
-      return "gemini";
+      return "google";
     default:
       return "openai"; // fallback
   }

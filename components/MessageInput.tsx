@@ -87,7 +87,7 @@ export default function MessageInput({
                 disabled={disabled}
               >
                 <option value="openai">OpenAI GPT-4o</option>
-                <option value="gemini">Google Gemini 2.5 Flash</option>
+                <option value="google">Google Gemini 2.5 Flash</option>
               </select>
             )}
           </div>

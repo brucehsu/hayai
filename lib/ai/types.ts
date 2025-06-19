@@ -40,7 +40,7 @@ export interface AIStreamResponse {
 
 export interface AIClient {
   /**
-   * The provider name (e.g., 'openai', 'gemini')
+   * The provider name (e.g., 'openai', 'google')
    */
   readonly provider: string;
 
@@ -73,7 +73,7 @@ export interface ChatOptions {
   stream?: boolean;
 }
 
-export type AIProvider = "openai" | "gemini";
+export type AIProvider = "openai" | "google";
 
 export interface AIError extends Error {
   provider: string;

@@ -14,6 +14,7 @@ import {
 import ChatLayout from "../../components/ChatLayout.tsx";
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage } from "../../lib/ai/types.ts";
+import { getModelVersionFromProvider } from "../../utils/model-mapping.ts";
 
 interface PageData {
   user: {
@@ -256,9 +257,12 @@ export const handler: Handlers<PageData> = {
     messages.push(aiMessage);
 
     // Update thread
+    const llm_model_version = getModelVersionFromProvider(provider);
+    
     updateThreadByUuid(threadUuid, {
       messages: JSON.stringify(messages),
       llm_provider: provider,
+      llm_model_version: llm_model_version,
     });
 
     // Instead of redirecting, return the updated page data directly

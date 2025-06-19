@@ -9,7 +9,7 @@ import {
 } from "./types.ts";
 
 export class GeminiClient implements AIClient {
-  readonly provider = "gemini";
+  readonly provider = "google";
   readonly defaultModel = "gemini-2.5-flash";
 
   private config: AIClientConfig;

@@ -10,6 +10,7 @@ import { createThread, getThreadsByUserId } from "../../db/database.ts";
 import ChatLayout from "../../components/ChatLayout.tsx";
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage } from "../../lib/ai/types.ts";
+import { getModelVersionFromProvider } from "../../utils/model-mapping.ts";
 
 interface PageData {
   user: {
@@ -94,7 +95,7 @@ export const handler: Handlers<PageData> = {
     let extendedSession = await getExtendedSessionFromRequest(req);
     const formData = await req.formData();
     const message = formData.get("message") as string;
-    const provider = formData.get("provider") as string || "gemini";
+    const provider = formData.get("provider") as string || "google";
 
     if (!message?.trim()) {
       return new Response("Message is required", { status: 400 });
@@ -138,11 +139,15 @@ export const handler: Handlers<PageData> = {
     }
 
     // Create empty thread with placeholder title
+    const llm_model_version = getModelVersionFromProvider(provider);
+    
     const newThread = createThread({
       user_id: extendedSession.userId,
       title: "New Conversation", // Placeholder title
       messages: JSON.stringify([]), // Empty messages array
       llm_provider: provider,
+      llm_model_version: llm_model_version,
+      public: false,
     });
 
     // Redirect to the new thread with the message as URL parameter
