@@ -41,11 +41,21 @@ export default function Message(
     ? message.summary
     : message.content;
 
-    let summaryOperationButton: JSX.Element | null = null;
-    if (showSummary && message.summary !== message.content) {
-      const opType = internalShowSummary ? "unfold" : "summarise";
-      summaryOperationButton = (<span class="absolute left-40 top-1/2 -translate-y-1/2 pr-2"><Button variant="create" onClick={() => setInternalShowSummary(!internalShowSummary)} class={`${opType}-button`}><Icon type={opType} /></Button></span>);
-    }
+  let summaryOperationButton: JSX.Element | null = null;
+  if (showSummary && message.summary !== message.content) {
+    const opType = internalShowSummary ? "unfold" : "summarise";
+    summaryOperationButton = (
+      <span class="absolute left-40 top-1/2 -translate-y-1/2 pr-2">
+        <Button
+          variant="create"
+          onClick={() => setInternalShowSummary(!internalShowSummary)}
+          class={`${opType}-button`}
+        >
+          <Icon type={opType} />
+        </Button>
+      </span>
+    );
+  }
 
   return (
     <div
