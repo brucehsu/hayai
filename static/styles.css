@@ -179,3 +179,37 @@
 .markdown-content em {
   font-style: italic;
 }
+
+/* Summarise Icon Animation */
+.summarise-icon {
+  transition: all 0.3s ease;
+}
+
+.summarise-icon .arrow {
+  transition: transform 0.3s ease;
+  transform-origin: center center;
+}
+
+.summarise-icon .arrow-top {
+  transform: translateY(6px) translateX(-4px);
+}
+
+.summarise-icon .arrow-bottom {
+  transform: translateY(-6px)  translateX(4px);
+}
+
+.summarise-icon:hover .arrow-top {
+  transform: translateY(2px) translateX(-4px);
+}
+
+.summarise-icon:hover .arrow-bottom {
+  transform: translateY(-2px) translateX(4px);
+}
+
+.summarise-button:hover .summarise-icon .arrow-top {
+  transform: translateY(2px) translateX(-4px);
+}
+
+.summarise-button:hover .summarise-icon .arrow-bottom {
+  transform: translateY(-2px) translateX(4px);
+}

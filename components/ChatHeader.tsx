@@ -54,6 +54,11 @@ export default function ChatHeader(
     }
   };
 
+  const handleSummarise = () => {
+    // TODO: Implement summarise functionality
+    console.log("Summarise messages");
+  };
+
   return (
     <div class="bg-white border-b border-gray-200 p-4">
       <div class="flex items-center justify-between">
@@ -76,6 +81,24 @@ export default function ChatHeader(
             <Badge variant="green">Public</Badge>
           )}
         </div>
+
+        {/* Center Summarise Button */}
+        {currentThread && (
+          <div class="flex-1 flex justify-center">
+            <Button
+              variant="submit"
+              type="button"
+              onClick={handleSummarise}
+              class="px-4 py-2 flex items-center gap-2 summarise-button"
+            >
+              
+              <span>Summarise</span>
+              <Icon type="summarise" />
+              <span>Messages</span>
+            </Button>
+          </div>
+        )}
+
         {currentThread && (
           <div class="flex items-center gap-2">
             <Badge variant="blue">
