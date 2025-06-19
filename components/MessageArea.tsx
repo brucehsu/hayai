@@ -5,7 +5,6 @@ import Button from "./Button.tsx";
 
 interface MessageAreaProps {
   error?: string;
-  currentThread?: any;
   allMessages: any[];
   isStreaming: boolean;
   isSubmitting: boolean;
@@ -16,7 +15,6 @@ interface MessageAreaProps {
 
 export default function MessageArea({
   error,
-  currentThread,
   allMessages,
   isStreaming,
   isSubmitting,
@@ -38,7 +36,7 @@ export default function MessageArea({
 
   const renderStreamingMessage = () => {
     const shouldShowStreamingMessage = (isSubmitting || isStreaming) &&
-      currentThread;
+      allMessages.length > 0;
 
     if (!shouldShowStreamingMessage) {
       return null;
@@ -65,9 +63,6 @@ export default function MessageArea({
   // Handle error state
   if (error) {
     children = <ErrorState error={error} />;
-  } // Handle no current thread
-  else if (!currentThread) {
-    children = <EmptyState />;
   } // Handle empty messages and not streaming
   else if (allMessages.length === 0 && !isStreaming) {
     children = <EmptyState />;

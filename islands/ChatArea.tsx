@@ -36,9 +36,13 @@ export default function ChatArea(
   const [showSummaries, setShowSummaries] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
-  const baseMessages = currentThread
-    ? JSON.parse(currentThread.messages || "[]")
-    : [];
+  const [baseMessages, setBaseMessages] = useState<Array<any>>([]);
+  useEffect(() => {
+    if (currentThread) {
+      setBaseMessages(JSON.parse(currentThread?.messages));
+    }
+  }, [currentThread?.messages.length]);
+
   const allMessages = [...baseMessages, ...optimisticMessages];
 
   // Check if this is a new empty thread
@@ -309,12 +313,9 @@ export default function ChatArea(
       const data = await response.json();
 
       if (response.ok) {
-        console.log(
-          "Summarization successful:",
-          JSON.stringify(JSON.parse(data.thread.messages), null, 2),
-        );
         // Enable summary view
         setShowSummaries(true);
+        setBaseMessages(JSON.parse(data.thread.messages));
       } else {
         console.error("Summarization failed:", data);
       }
@@ -353,7 +354,6 @@ export default function ChatArea(
 
       <MessageArea
         error={error}
-        currentThread={currentThread}
         allMessages={allMessages}
         isStreaming={isStreaming}
         isSubmitting={isSubmitting}
