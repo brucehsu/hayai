@@ -167,9 +167,17 @@ export default function ChatArea(
                   if (threadId) {
                     await saveStreamedMessage(threadId, message, fullContent);
                   }
-                  setTimeout(() => {
-                    window.location.reload();
-                  }, 100);
+                  
+                  // Update local state instead of reloading the page
+                  const aiMessage = {
+                    type: "assistant", 
+                    content: fullContent,
+                    timestamp: new Date().toISOString(),
+                  };
+                  
+                  // Move optimistic user message to base messages and add AI response
+                  setBaseMessages(prev => [...prev, ...optimisticMessages, aiMessage]);
+                  setOptimisticMessages([]);
                   return;
                 } else if (data.type === "error") {
                   throw new Error(data.error);
