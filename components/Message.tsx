@@ -45,7 +45,7 @@ export default function Message(
   if (showSummary && message.summary !== message.content) {
     const opType = internalShowSummary ? "unfold" : "summarise";
     summaryOperationButton = (
-      <span class="absolute left-40 top-1/2 -translate-y-1/2 pr-2">
+      <span class="absolute -left-6 top-1/2 -translate-y-1/2 -translate-x-full">
         <Button
           variant="create"
           onClick={() => setInternalShowSummary(!internalShowSummary)}
@@ -59,16 +59,16 @@ export default function Message(
 
   return (
     <div
-      class={`relative flex justify-center`}
+      class={`flex justify-center`}
     >
-      {summaryOperationButton}
       <div
-        class={`w-[80%] px-4 py-2 rounded-lg ${
+        class={`relative w-[80%] px-4 py-2 rounded-lg ${
           message.type === "user"
             ? "bg-user-message text-white text-right"
             : "bg-white text-gray-800 border border-gray-200"
         }`}
       >
+        {summaryOperationButton}
         {displayContent === null
           ? (
             <div class="flex justify-center p-4">
