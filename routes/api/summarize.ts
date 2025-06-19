@@ -221,7 +221,7 @@ ${
             summary,
           };
         }
-        return Object.assign({summary: message.content}, {
+        return Object.assign({ summary: message.content }, {
           ...message,
         });
       });
