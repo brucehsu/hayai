@@ -25,6 +25,7 @@ interface MessageProps {
 }
 
 export default function Message({ message }: MessageProps): JSX.Element {
+  console.log(message.timestamp);
   return (
     <div
       class={`flex justify-center`}

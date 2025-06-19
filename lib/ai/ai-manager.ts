@@ -144,6 +144,7 @@ export class AIManager {
       case "google":
         return [
           "gemini-2.5-flash",
+          "gemini-2.5-flash-lite-preview-06-17",
           "gemini-1.5-flash",
           "gemini-1.5-pro",
           "gemini-pro",

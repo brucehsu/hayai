@@ -5,6 +5,7 @@
 import * as $_app from "./routes/_app.tsx";
 import * as $api_chat from "./routes/api/chat.ts";
 import * as $api_share from "./routes/api/share.ts";
+import * as $api_summarize from "./routes/api/summarize.ts";
 import * as $auth_callback from "./routes/auth/callback.ts";
 import * as $auth_login from "./routes/auth/login.tsx";
 import * as $auth_logout from "./routes/auth/logout.ts";
@@ -19,6 +20,7 @@ const manifest = {
     "./routes/_app.tsx": $_app,
     "./routes/api/chat.ts": $api_chat,
     "./routes/api/share.ts": $api_share,
+    "./routes/api/summarize.ts": $api_summarize,
     "./routes/auth/callback.ts": $auth_callback,
     "./routes/auth/login.tsx": $auth_login,
     "./routes/auth/logout.ts": $auth_logout,

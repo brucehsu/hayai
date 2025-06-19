@@ -1,0 +1,254 @@
+import { aiManager } from "../../lib/ai/ai-manager.ts";
+import { AIMessage } from "../../lib/ai/types.ts";
+import { getExtendedSessionFromRequest } from "../../utils/session.ts";
+import { getThreadByUuid, updateThreadByUuid, Thread } from "../../db/database.ts";
+
+interface MessageToSummarize {
+  type: string;
+  content: string;
+  timestamp: string;
+  summary?: string | null;
+}
+
+interface SummarizedMessage {
+  summary: string;
+  timestamp: string;
+}
+
+export const handler = {
+  async POST(req: Request, _ctx: any) {
+    // Validate session for all requests
+    const extendedSession = await getExtendedSessionFromRequest(req);
+    if (!extendedSession) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    try {
+      const { threadUuid } = await req.json();
+
+      if (!threadUuid) {
+        return new Response(
+          JSON.stringify({ error: "Thread UUID is required" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Get the thread from database
+      const thread = getThreadByUuid(threadUuid);
+      if (!thread) {
+        return new Response(
+          JSON.stringify({ error: "Thread not found" }),
+          {
+            status: 404,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Check if user has access to this thread
+      if (thread.user_id !== extendedSession.userId && !thread.public) {
+        return new Response(
+          JSON.stringify({ error: "Access denied" }),
+          {
+            status: 403,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Parse messages from thread
+      let messages: MessageToSummarize[];
+      try {
+        messages = JSON.parse(thread.messages);
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ error: "Invalid thread messages format" }),
+          {
+            status: 400,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (!Array.isArray(messages) || messages.length === 0) {
+        return new Response(
+          JSON.stringify({ 
+            success: true, 
+            message: "No messages to summarize",
+            thread: thread 
+          }),
+          {
+            status: 200,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Create the prompt for Gemini
+      const prompt = `You're a helpful writer who follows my instructions completely and can easily spot the highlights in a given text and summarise them in a few words without losing too many details. You can also write beautiful text with concise and easy-to-understand wording.
+
+Given a JSON array in the following format:
+\`\`\`json
+[ { "type": "user_OR_OTHERS", "content": "MESSAGE_BODY", "timestamp": "ISO-8601-DATETIME-STRING", "summary": "NULLABLE-FIELD" } ]
+\`\`\`
+
+
+You should return a new JSON array that follows the following format:
+
+\`\`\`json
+[{"content": "ORIGINAL-CONTENT", "summary": "SUMMARY-IN-200CHARS-OR-ORIGINAL-CONTENT-IN-200CHARS", "timestamp": "ORIGINAL-ISO8601-DATETIME-STRING }]
+\`\`\`
+
+YOU NEED TO STRICTLY FOLLOW THE INSTRUCTIONS BELOW:
+
+Going through each entry's \`"content"\` field,
+- If the original entry's  \`"content"\` is <= 200 characters then maps \`"content"\` in the \`"summary"\` field, DO NOT mutate or summarise it.
+- If the original entry's  \`"content"\` is > 200 characters then summarise \`"content"\` in the original language it was written in, 
+with the important information of the content and its context in mind,
+make it more than 80 characters but within 200 characters, maps it to the \`"summary"\` field.
+
+ENSURE the returned JSON is valid and follows the given format.
+
+DO NOT summarise  the \`"content"\` IF it's already within 200 characters.
+
+Here's the array to process:
+\`\`\`json
+${JSON.stringify(messages)}
+\`\`\``;
+
+      // Prepare messages for AI
+      const aiMessages: AIMessage[] = [
+        {
+          role: "user",
+          content: prompt,
+        },
+      ];
+
+      // Check if Google provider is available
+      if (!aiManager.isProviderAvailable("google")) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Google AI provider is not available or not configured",
+            availableProviders: aiManager.getAvailableProviders(),
+          }),
+          {
+            status: 503,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Send request to Gemini
+      const aiResponse = await aiManager.chat(
+        aiMessages,
+        "google",
+        {
+          model: "gemini-2.5-flash-lite-preview-06-17",
+        },
+      );
+
+      if (!aiResponse.content) {
+        return new Response(
+          JSON.stringify({ error: "No response from AI model" }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Parse the AI response
+      let summaries: SummarizedMessage[];
+      try {
+        // Extract JSON from the response (in case it's wrapped in markdown)
+        console.log(aiResponse.content);
+        const jsonMatch = aiResponse.content.match(/\[[\s\S]*\]/);
+        const jsonString = jsonMatch ? jsonMatch[0] : aiResponse.content;
+        summaries = JSON.parse(jsonString);
+      } catch (error) {
+        return new Response(
+          JSON.stringify({ 
+            error: "Failed to parse AI response",
+            aiResponse: aiResponse.content,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      if (!Array.isArray(summaries)) {
+        return new Response(
+          JSON.stringify({ 
+            error: "AI response is not an array",
+            aiResponse: aiResponse.content,
+          }),
+          {
+            status: 500,
+            headers: { "Content-Type": "application/json" },
+          },
+        );
+      }
+
+      // Create a map for quick lookup of summaries by timestamp
+      const summaryMap = new Map<string, string>();
+      summaries.forEach((summary) => {
+        if (summary.timestamp && summary.summary) {
+          summaryMap.set(summary.timestamp, summary.summary);
+        }
+      });
+
+      // Merge summaries back to original messages
+      const updatedMessages = messages.map((message) => {
+        const summary = summaryMap.get(message.timestamp);
+        if (summary) {
+          return {
+            ...message,
+            summary: summary,
+          };
+        }
+        return message;
+      });
+
+      // Update the thread in database
+      updateThreadByUuid(threadUuid, {
+        messages: JSON.stringify(updatedMessages),
+      });
+
+      // Get the updated thread
+      const updatedThread = getThreadByUuid(threadUuid);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          message: "Messages summarized successfully",
+          summariesGenerated: summaries.length,
+          thread: updatedThread,
+          usage: aiResponse.usage,
+        }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
+      console.error("Summarize API error:", error);
+
+      return new Response(
+        JSON.stringify({
+          error: (error instanceof Error ? error.message : String(error)) ||
+            "An error occurred while processing the summarization request",
+          success: false,
+        }),
+        {
+          status: 500,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  },
+}; 

@@ -56,9 +56,31 @@ export default function ChatHeader(
     }
   };
 
-  const handleSummarise = () => {
-    // TODO: Implement summarise functionality
-    console.log("Summarise messages");
+  const handleSummarise = async () => {
+    if (!currentThread) {
+      console.log("No current thread available");
+      return;
+    }
+
+    console.log("Starting summarization for thread:", currentThread.uuid);
+
+    try {
+      const response = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ threadUuid: currentThread.uuid }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Summarization successful:", JSON.stringify(JSON.parse(data.thread.messages), null, 2));
+      } else {
+        console.error("Summarization failed:", data);
+      }
+    } catch (error) {
+      console.error("Error calling summarize endpoint:", error);
+    }
   };
 
   return (
