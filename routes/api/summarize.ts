@@ -110,10 +110,10 @@ You should return a new JSON array that follows the following format:
 
 YOU NEED TO STRICTLY FOLLOW THE INSTRUCTIONS BELOW:
 
-Going through each entry's \`"content"\` field:
-If the original entry's  \`"content"\` is > 200 characters then summarise \`"content"\` in the original language it was written in, 
+Going through each element of the given array:
+Summarise current element's "content" field in the language "content" was written in,
 with the important information of the content and its context in mind,
-make it more than 80 characters but within 200 characters, maps it to the \`"summary"\` field.
+make it more than 80 characters but within 200 characters, maps the generated summary to the "summary" field.
 
 ENSURE the returned JSON is valid and follows the given format.
 
