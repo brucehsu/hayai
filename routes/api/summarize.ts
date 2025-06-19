@@ -123,7 +123,7 @@ Here's the array to process:
 \`\`\`json
 ${
           JSON.stringify(allMessages.filter((message: Message) =>
-            message.content.length > 200
+            message.content.length > 200 && !message.summary
           ))
         }
 \`\`\``;
@@ -214,18 +214,16 @@ ${
       // Merge summaries back to original messages
       const updatedMessages = allMessages.map((message) => {
         const summary =
-          summaryMap.get(`${message.type}-${message.timestamp}`) ??
-            message.content;
+          summaryMap.get(`${message.type}-${message.timestamp}`) || null;
         if (summary) {
           return {
             ...message,
             summary,
           };
         }
-        return {
+        return Object.assign({summary: message.content}, {
           ...message,
-          summary: message.content,
-        };
+        });
       });
 
       // Update the thread in database
