@@ -15,10 +15,12 @@ interface ChatHeaderProps {
   } | null;
   title?: string;
   isOwner?: boolean;
+  onSummarize?: (threadUuid: string) => void;
+  isSummarizing?: boolean;
 }
 
 export default function ChatHeader(
-  { currentThread, title, isOwner = false }: ChatHeaderProps,
+  { currentThread, title, isOwner = false, onSummarize, isSummarizing = false }: ChatHeaderProps,
 ): JSX.Element {
   const handleShare = async () => {
     if (!currentThread) return;
@@ -57,30 +59,11 @@ export default function ChatHeader(
   };
 
   const handleSummarise = async () => {
-    if (!currentThread) {
-      console.log("No current thread available");
+    if (!currentThread || isSummarizing || !onSummarize) {
       return;
     }
 
-    console.log("Starting summarization for thread:", currentThread.uuid);
-
-    try {
-      const response = await fetch("/api/summarize", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ threadUuid: currentThread.uuid }),
-      });
-
-      const data = await response.json();
-
-      if (response.ok) {
-        console.log("Summarization successful:", JSON.stringify(JSON.parse(data.thread.messages), null, 2));
-      } else {
-        console.error("Summarization failed:", data);
-      }
-    } catch (error) {
-      console.error("Error calling summarize endpoint:", error);
-    }
+    onSummarize(currentThread.uuid);
   };
 
   return (
@@ -97,6 +80,7 @@ export default function ChatHeader(
               onClick={handleShare}
               class="px-3 py-2"
               id="share-button"
+              disabled={isSummarizing}
             >
               <Icon type="share" />
             </Button>
@@ -114,9 +98,10 @@ export default function ChatHeader(
               type="button"
               onClick={handleSummarise}
               class="px-4 py-2 flex items-center gap-2 summarise-button"
+              disabled={isSummarizing}
             >
               <span>Summarise</span>
-              <Icon type="summarise" />
+              <Icon type={isSummarizing ? "spinner" : "summarise"} />
               <span>Messages</span>
             </Button>
           </div>

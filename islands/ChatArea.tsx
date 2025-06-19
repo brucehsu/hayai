@@ -5,6 +5,7 @@ import ChatHeader from "../components/ChatHeader.tsx";
 import MessageArea from "../components/MessageArea.tsx";
 import Button from "../components/Button.tsx";
 import MessageInput from "../components/MessageInput.tsx";
+import Icon from "../components/Icon.tsx";
 
 interface ChatAreaProps {
   currentThread: any;
@@ -31,6 +32,7 @@ export default function ChatArea(
   const [threadTitle, setThreadTitle] = useState<string>(
     currentThread?.title || "New Conversation",
   );
+  const [isSummarizing, setIsSummarizing] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const baseMessages = currentThread
@@ -292,13 +294,55 @@ export default function ChatArea(
     });
   };
 
+  // Handle summarization
+  const handleSummarization = async (threadUuid: string) => {
+    setIsSummarizing(true);
+    
+    try {
+      const response = await fetch("/api/summarize", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ threadUuid }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        console.log("Summarization successful:", JSON.stringify(JSON.parse(data.thread.messages), null, 2));
+        // Reload the page to show updated summaries
+        setTimeout(() => {
+          window.location.reload();
+        }, 500);
+      } else {
+        console.error("Summarization failed:", data);
+      }
+    } catch (error) {
+      console.error("Error calling summarize endpoint:", error);
+    } finally {
+      setIsSummarizing(false);
+    }
+  };
+
   return (
-    <div class="flex-1 flex flex-col">
+    <div class="flex-1 flex flex-col relative">
       <ChatHeader
         currentThread={currentThread}
         title={threadTitle}
         isOwner={isOwner}
+        onSummarize={handleSummarization}
+        isSummarizing={isSummarizing}
       />
+
+      {/* Loading Overlay for Summarization */}
+      {isSummarizing && (
+        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style={{ top: '73px' }}>
+          <div class="bg-white rounded-lg p-6 flex flex-col items-center gap-3 shadow-lg">
+            <Icon type="spinner" size="lg" />
+            <p class="text-gray-700 font-medium">Summarizing messages...</p>
+            <p class="text-gray-500 text-sm">This may take a few moments</p>
+          </div>
+        </div>
+      )}
 
       <MessageArea
         error={error}
@@ -307,6 +351,7 @@ export default function ChatArea(
         isStreaming={isStreaming}
         isSubmitting={isSubmitting}
         streamingMessage={streamingMessage}
+        disabled={isSummarizing}
       />
 
       {/* Input Area */}
@@ -359,7 +404,7 @@ export default function ChatArea(
                         ? "You can only view this shared thread"
                         : "Type your message..."}
                       disabled={isSubmitting || isGuestRateLimited ||
-                        isStreaming || !isOwner}
+                        isStreaming || !isOwner || isSummarizing}
                       isSubmitting={isSubmitting}
                       providerValue={currentThread.llm_provider}
                     />
@@ -411,7 +456,7 @@ export default function ChatArea(
                       placeholder={isSubmitting
                         ? "Starting chat..."
                         : "Start a new conversation..."}
-                      disabled={isSubmitting || isGuestRateLimited}
+                      disabled={isSubmitting || isGuestRateLimited || isSummarizing}
                       isSubmitting={isSubmitting}
                       showProviderSelect={true}
                     />

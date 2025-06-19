@@ -10,6 +10,7 @@ interface MessageAreaProps {
   isStreaming: boolean;
   isSubmitting: boolean;
   streamingMessage: string;
+  disabled?: boolean;
 }
 
 export default function MessageArea({
@@ -19,6 +20,7 @@ export default function MessageArea({
   isStreaming,
   isSubmitting,
   streamingMessage,
+  disabled = false,
 }: MessageAreaProps): JSX.Element {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -81,7 +83,7 @@ export default function MessageArea({
   return (
     <div
       ref={scrollContainerRef}
-      class="flex-1 overflow-y-auto p-4 bg-gray-50"
+      class={`flex-1 overflow-y-auto p-4 bg-gray-50 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
     >
       {children}
     </div>
