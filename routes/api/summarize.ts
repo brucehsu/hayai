@@ -1,7 +1,11 @@
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage } from "../../lib/ai/types.ts";
 import { getExtendedSessionFromRequest } from "../../utils/session.ts";
-import { getThreadByUuid, updateThreadByUuid, Thread } from "../../db/database.ts";
+import {
+  getThreadByUuid,
+  Thread,
+  updateThreadByUuid,
+} from "../../db/database.ts";
 
 interface Message {
   type: string;
@@ -76,10 +80,10 @@ export const handler = {
 
       if (!Array.isArray(allMessages) || allMessages.length === 0) {
         return new Response(
-          JSON.stringify({ 
-            success: true, 
+          JSON.stringify({
+            success: true,
             message: "No messages to summarize",
-            thread: thread 
+            thread: thread,
           }),
           {
             status: 200,
@@ -89,7 +93,8 @@ export const handler = {
       }
 
       // Create the prompt for Gemini
-      const prompt = `You're a helpful writer who follows my instructions completely and can easily spot the highlights in a given text and summarise them in a few words without losing too many details. You can also write beautiful text with concise and easy-to-understand wording.
+      const prompt =
+        `You're a helpful writer who follows my instructions completely and can easily spot the highlights in a given text and summarise them in a few words without losing too many details. You can also write beautiful text with concise and easy-to-understand wording.
 
 Given a JSON array in the following format:
 \`\`\`json
@@ -116,7 +121,11 @@ DO NOT summarise  the \`"content"\` IF it's already within 200 characters.
 
 Here's the array to process:
 \`\`\`json
-${JSON.stringify(allMessages.filter((message: Message) => message.content.length > 200))}
+${
+          JSON.stringify(allMessages.filter((message: Message) =>
+            message.content.length > 200
+          ))
+        }
 \`\`\``;
 
       // Prepare messages for AI
@@ -130,7 +139,7 @@ ${JSON.stringify(allMessages.filter((message: Message) => message.content.length
       // Check if Google provider is available
       if (!aiManager.isProviderAvailable("google")) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "Google AI provider is not available or not configured",
             availableProviders: aiManager.getAvailableProviders(),
           }),
@@ -169,7 +178,7 @@ ${JSON.stringify(allMessages.filter((message: Message) => message.content.length
         summaries = JSON.parse(jsonString);
       } catch (error) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "Failed to parse AI response",
             aiResponse: aiResponse.content,
           }),
@@ -182,7 +191,7 @@ ${JSON.stringify(allMessages.filter((message: Message) => message.content.length
 
       if (!Array.isArray(summaries)) {
         return new Response(
-          JSON.stringify({ 
+          JSON.stringify({
             error: "AI response is not an array",
             aiResponse: aiResponse.content,
           }),
@@ -196,7 +205,7 @@ ${JSON.stringify(allMessages.filter((message: Message) => message.content.length
       // Create a map for quick lookup of summaries by timestamp
       const summaryMap = new Map<string, string>();
       summaries.forEach((summary) => {
-        const {summary: summaryText, type, timestamp} = summary;
+        const { summary: summaryText, type, timestamp } = summary;
         if (type && timestamp && summaryText) {
           summaryMap.set(`${type}-${timestamp}`, summaryText);
         }
@@ -204,7 +213,9 @@ ${JSON.stringify(allMessages.filter((message: Message) => message.content.length
 
       // Merge summaries back to original messages
       const updatedMessages = allMessages.map((message) => {
-        const summary = summaryMap.get(`${message.type}-${message.timestamp}`) ?? message.content;
+        const summary =
+          summaryMap.get(`${message.type}-${message.timestamp}`) ??
+            message.content;
         if (summary) {
           return {
             ...message,
@@ -212,8 +223,8 @@ ${JSON.stringify(allMessages.filter((message: Message) => message.content.length
           };
         }
         return {
-            ...message,
-            summary: message.content,
+          ...message,
+          summary: message.content,
         };
       });
 
@@ -254,4 +265,4 @@ ${JSON.stringify(allMessages.filter((message: Message) => message.content.length
       );
     }
   },
-}; 
+};

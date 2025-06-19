@@ -33,6 +33,7 @@ export default function ChatArea(
     currentThread?.title || "New Conversation",
   );
   const [isSummarizing, setIsSummarizing] = useState(false);
+  const [showSummaries, setShowSummaries] = useState(false);
   const eventSourceRef = useRef<EventSource | null>(null);
 
   const baseMessages = currentThread
@@ -297,7 +298,7 @@ export default function ChatArea(
   // Handle summarization
   const handleSummarization = async (threadUuid: string) => {
     setIsSummarizing(true);
-    
+
     try {
       const response = await fetch("/api/summarize", {
         method: "POST",
@@ -308,11 +309,12 @@ export default function ChatArea(
       const data = await response.json();
 
       if (response.ok) {
-        console.log("Summarization successful:", JSON.stringify(JSON.parse(data.thread.messages), null, 2));
-        // Reload the page to show updated summaries
-        setTimeout(() => {
-          window.location.reload();
-        }, 500);
+        console.log(
+          "Summarization successful:",
+          JSON.stringify(JSON.parse(data.thread.messages), null, 2),
+        );
+        // Enable summary view
+        setShowSummaries(true);
       } else {
         console.error("Summarization failed:", data);
       }
@@ -331,11 +333,16 @@ export default function ChatArea(
         isOwner={isOwner}
         onSummarize={handleSummarization}
         isSummarizing={isSummarizing}
+        showSummaries={showSummaries}
+        onToggleSummaries={() => setShowSummaries(!showSummaries)}
       />
 
       {/* Loading Overlay for Summarization */}
       {isSummarizing && (
-        <div class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50" style={{ top: '73px' }}>
+        <div
+          class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50"
+          style={{ top: "73px" }}
+        >
           <div class="bg-white rounded-lg p-6 flex flex-col items-center gap-3 shadow-lg">
             <Icon type="spinner" size="lg" />
             <p class="text-gray-700 font-medium">Summarizing messages...</p>
@@ -352,6 +359,7 @@ export default function ChatArea(
         isSubmitting={isSubmitting}
         streamingMessage={streamingMessage}
         disabled={isSummarizing}
+        showSummaries={showSummaries}
       />
 
       {/* Input Area */}
@@ -456,7 +464,8 @@ export default function ChatArea(
                       placeholder={isSubmitting
                         ? "Starting chat..."
                         : "Start a new conversation..."}
-                      disabled={isSubmitting || isGuestRateLimited || isSummarizing}
+                      disabled={isSubmitting || isGuestRateLimited ||
+                        isSummarizing}
                       isSubmitting={isSubmitting}
                       showProviderSelect={true}
                     />

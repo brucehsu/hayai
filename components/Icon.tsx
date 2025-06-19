@@ -1,6 +1,12 @@
 import { JSX } from "preact";
 
-export type IconType = "share" | "send" | "spinner" | "google" | "summarise";
+export type IconType =
+  | "share"
+  | "send"
+  | "spinner"
+  | "google"
+  | "summarise"
+  | "unfold";
 
 interface IconProps {
   type: IconType;
@@ -117,6 +123,30 @@ export default function Icon(
       return (
         <svg
           class={`${baseClass} summarise-icon`}
+          viewBox="0 0 24 24"
+          fill="none"
+          stroke="currentColor"
+          stroke-width="2"
+        >
+          <path
+            class="arrow arrow-top"
+            d="M7 14 L12 9 L17 14"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+          <path
+            class="arrow arrow-bottom"
+            d="M7 10 L12 15 L17 10"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          />
+        </svg>
+      );
+
+    case "unfold":
+      return (
+        <svg
+          class={`${baseClass} unfold-icon`}
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"

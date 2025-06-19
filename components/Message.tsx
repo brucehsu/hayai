@@ -20,11 +20,20 @@ interface MessageProps {
   message: {
     type: string;
     content: string | null;
+    summary?: string | null;
     timestamp?: string;
   };
+  showSummary?: boolean;
 }
 
-export default function Message({ message }: MessageProps): JSX.Element {
+export default function Message(
+  { message, showSummary = false }: MessageProps,
+): JSX.Element {
+  // Use summary if showSummary is true and summary is available, otherwise use content
+  const displayContent = showSummary && message.summary
+    ? message.summary
+    : message.content;
+
   return (
     <div
       class={`flex justify-center`}
@@ -36,7 +45,7 @@ export default function Message({ message }: MessageProps): JSX.Element {
             : "bg-white text-gray-800 border border-gray-200"
         }`}
       >
-        {message.content === null
+        {displayContent === null
           ? (
             <div class="flex justify-center p-4">
               <Icon type="spinner" />
@@ -46,7 +55,7 @@ export default function Message({ message }: MessageProps): JSX.Element {
             <div
               class="text-sm markdown-content"
               dangerouslySetInnerHTML={{
-                __html: marked.parse(message.content) as string,
+                __html: marked.parse(displayContent) as string,
               }}
             />
           )}

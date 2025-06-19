@@ -3,24 +3,46 @@ import Badge from "./Badge.tsx";
 import Button from "./Button.tsx";
 import Icon from "./Icon.tsx";
 import { getModelDisplayNameFromThread } from "../utils/model-mapping.ts";
+import { Thread } from "../db/database.ts";
 
 interface ChatHeaderProps {
-  currentThread?: {
-    uuid: string;
-    title: string;
-    llm_provider: string;
-    llm_model_version?: string;
-    public: boolean;
-    user_id: number;
-  } | null;
+  currentThread?: Thread | null;
   title?: string;
   isOwner?: boolean;
   onSummarize?: (threadUuid: string) => void;
   isSummarizing?: boolean;
+  showSummaries?: boolean;
+  onToggleSummaries?: () => void;
+}
+
+// Utility function to check if a thread has been summarized
+function isThreadSummarized(thread: ChatHeaderProps["currentThread"]): boolean {
+  if (!thread || !thread.messages) return false;
+
+  try {
+    const messages = JSON.parse(thread.messages);
+    if (!Array.isArray(messages) || messages.length === 0) return false;
+
+    // Check if any message has a summary field that's different from its content
+    return messages.some((message: { summary?: string; content: string }) =>
+      message.summary &&
+      message.summary !== message.content
+    );
+  } catch {
+    return false;
+  }
 }
 
 export default function ChatHeader(
-  { currentThread, title, isOwner = false, onSummarize, isSummarizing = false }: ChatHeaderProps,
+  {
+    currentThread,
+    title,
+    isOwner = false,
+    onSummarize,
+    isSummarizing = false,
+    showSummaries = false,
+    onToggleSummaries,
+  }: ChatHeaderProps,
 ): JSX.Element {
   const handleShare = async () => {
     if (!currentThread) return;
@@ -90,20 +112,35 @@ export default function ChatHeader(
           )}
         </div>
 
-        {/* Center Summarise Button */}
+        {/* Center Buttons */}
         {currentThread && (
-          <div class="flex-1 flex justify-center">
-            <Button
-              variant="submit"
-              type="button"
-              onClick={handleSummarise}
-              class="px-4 py-2 flex items-center gap-2 summarise-button"
-              disabled={isSummarizing}
-            >
-              <span>Summarise</span>
-              <Icon type={isSummarizing ? "spinner" : "summarise"} />
-              <span>Messages</span>
-            </Button>
+          <div class="flex-1 flex justify-center gap-2">
+            {!showSummaries
+              ? (
+                <Button
+                  variant="submit"
+                  type="button"
+                  onClick={handleSummarise}
+                  class="px-4 py-2 flex items-center gap-2 summarise-button"
+                  disabled={isSummarizing}
+                >
+                  <span>Summarise</span>
+                  <Icon type={isSummarizing ? "spinner" : "summarise"} />
+                  <span>Messages</span>
+                </Button>
+              )
+              : (
+                <Button
+                  variant="submit"
+                  type="button"
+                  onClick={onToggleSummaries}
+                  class="px-4 py-2 flex items-center gap-2 unfold-button"
+                >
+                  <span>Unfold</span>
+                  <Icon type={"unfold"} />
+                  <span>Messages</span>
+                </Button>
+              )}
           </div>
         )}
 

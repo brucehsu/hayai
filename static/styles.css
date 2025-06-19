@@ -213,3 +213,37 @@
 .summarise-button:hover .summarise-icon .arrow-bottom {
   transform: translateY(-2px) translateX(4px);
 }
+
+/* Unfold Icon Animation */
+.unfold-icon {
+  transition: all 0.3s ease;
+}
+
+.unfold-icon .arrow {
+  transition: transform 0.3s ease;
+  transform-origin: center center;
+}
+
+.unfold-icon .arrow-top {
+  transform: translateY(-4px) translateX(4px);
+}
+
+.unfold-icon .arrow-bottom {
+  transform: translateY(4px) translateX(-4px);
+}
+
+.unfold-icon:hover .arrow-top {
+  transform: translateY(-6px) translateX(4px);
+}
+
+.unfold-icon:hover .arrow-bottom {
+  transform: translateY(6px) translateX(-4px);
+}
+
+.unfold-button:hover .unfold-icon .arrow-top {
+  transform: translateY(-6px) translateX(4px);
+}
+
+.unfold-button:hover .unfold-icon .arrow-bottom {
+  transform: translateY(6px) translateX(-4px);
+}

@@ -1,7 +1,10 @@
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage, AIProvider } from "../../lib/ai/types.ts";
 import { updateThreadByUuid } from "../../db/database.ts";
-import { getExtendedSessionFromRequest, ExtendedSessionData } from "../../utils/session.ts";
+import {
+  ExtendedSessionData,
+  getExtendedSessionFromRequest,
+} from "../../utils/session.ts";
 
 export const handler = {
   async POST(req: Request, _ctx: any) {
@@ -13,15 +16,18 @@ export const handler = {
 
     // Check rate limiting for guest users
     if (extendedSession.isGuest && extendedSession.isRateLimited) {
-      return new Response(JSON.stringify({
-        error: "Rate limit exceeded",
-        success: false,
-        messageLimit: extendedSession.messageLimit,
-        messagesRemaining: extendedSession.messagesRemaining,
-      }), {
-        status: 429,
-        headers: { "Content-Type": "application/json" },
-      });
+      return new Response(
+        JSON.stringify({
+          error: "Rate limit exceeded",
+          success: false,
+          messageLimit: extendedSession.messageLimit,
+          messagesRemaining: extendedSession.messagesRemaining,
+        }),
+        {
+          status: 429,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
     }
 
     const url = new URL(req.url);

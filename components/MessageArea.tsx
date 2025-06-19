@@ -11,6 +11,7 @@ interface MessageAreaProps {
   isSubmitting: boolean;
   streamingMessage: string;
   disabled?: boolean;
+  showSummaries?: boolean;
 }
 
 export default function MessageArea({
@@ -21,6 +22,7 @@ export default function MessageArea({
   isSubmitting,
   streamingMessage,
   disabled = false,
+  showSummaries = false,
 }: MessageAreaProps): JSX.Element {
   const scrollContainerRef = useRef<HTMLDivElement>(null);
 
@@ -53,6 +55,7 @@ export default function MessageArea({
           type: "assistant",
           content: streamingContent,
         }}
+        showSummary={showSummaries}
       />
     );
   };
@@ -73,7 +76,7 @@ export default function MessageArea({
     children = (
       <div class="space-y-4">
         {allMessages.map((message: any, index: number) => (
-          <Message key={index} message={message} />
+          <Message key={index} message={message} showSummary={showSummaries} />
         ))}
         {renderStreamingMessage()}
       </div>
@@ -83,7 +86,9 @@ export default function MessageArea({
   return (
     <div
       ref={scrollContainerRef}
-      class={`flex-1 overflow-y-auto p-4 bg-gray-50 ${disabled ? 'opacity-50 pointer-events-none' : ''}`}
+      class={`flex-1 overflow-y-auto p-4 bg-gray-50 ${
+        disabled ? "opacity-50 pointer-events-none" : ""
+      }`}
     >
       {children}
     </div>
