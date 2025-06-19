@@ -1,7 +1,7 @@
 import { JSX } from "preact";
 import { useEffect, useRef } from "preact/hooks";
 import Button from "./Button.tsx";
-import Spinner from "./Spinner.tsx";
+import Icon from "./Icon.tsx";
 
 interface MessageInputProps {
   onSubmit: (e: Event) => void;
@@ -102,29 +102,7 @@ export default function MessageInput({
               disabled={disabled}
               class="px-3 py-2 rounded-lg flex-shrink-0"
             >
-              {isSubmitting ? <Spinner /> : (
-                <svg
-                  class="w-5 h-5"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  xmlns="http://www.w3.org/2000/svg"
-                >
-                  <path
-                    d="M22 2L11 13"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M22 2L15 22L11 13L2 9L22 2Z"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                  />
-                </svg>
-              )}
+              {isSubmitting ? <Icon type="spinner" /> : <Icon type="send" />}
             </Button>
           </div>
         </div>

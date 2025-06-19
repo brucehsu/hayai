@@ -2,7 +2,7 @@ import { JSX } from "preact";
 import { Marked } from "marked";
 import { markedHighlight } from "marked-highlight";
 import hljs from "highlight.js";
-import Spinner from "./Spinner.tsx";
+import Icon from "./Icon.tsx";
 
 // Configure marked with syntax highlighting
 const marked = new Marked(
@@ -39,7 +39,7 @@ export default function Message({ message }: MessageProps): JSX.Element {
         {message.content === null
           ? (
             <div class="flex justify-center p-4">
-              <Spinner />
+              <Icon type="spinner" />
             </div>
           )
           : (
