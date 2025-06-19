@@ -1,4 +1,5 @@
 import { JSX } from "preact";
+import Badge from "./Badge.tsx";
 
 interface ChatHeaderProps {
   currentThread?: {
@@ -83,18 +84,16 @@ export default function ChatHeader(
             </button>
           )}
           {currentThread && Boolean(currentThread.public) && (
-            <span class="text-xs bg-green-100 text-green-800 px-2 py-1 rounded">
-              Public
-            </span>
+            <Badge variant="green">Public</Badge>
           )}
         </div>
         {currentThread && (
           <div class="flex items-center gap-2">
-            <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded">
+            <Badge variant="blue">
               {currentThread.llm_provider === "openai"
                 ? "OpenAI GPT-4o"
                 : "Google Gemini 2.5 Flash"}
-            </span>
+            </Badge>
             <img
               src="/logo.png"
               alt="hayai Logo"
