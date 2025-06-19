@@ -41,7 +41,7 @@ export default function ChatArea(
     if (currentThread) {
       setBaseMessages(JSON.parse(currentThread?.messages));
     }
-  }, [currentThread?.messages.length]);
+  }, [currentThread?.uuid]);
 
   const allMessages = [...baseMessages, ...optimisticMessages];
 
@@ -78,7 +78,7 @@ export default function ChatArea(
           timestamp: new Date().toISOString(),
         };
 
-        setOptimisticMessages([userMessage]);
+        setOptimisticMessages((prev) => [...prev, userMessage]);
         setIsSubmitting(true);
 
         // Use streaming response
@@ -168,15 +168,21 @@ export default function ChatArea(
                     await saveStreamedMessage(threadId, message, fullContent);
                   }
                   
-                  // Update local state instead of reloading the page
+                  // Update local state instead of reloading the page  
+                  const userMessage = {
+                    type: "user",
+                    content: message,
+                    timestamp: new Date().toISOString(),
+                  };
+                  
                   const aiMessage = {
                     type: "assistant", 
                     content: fullContent,
                     timestamp: new Date().toISOString(),
                   };
                   
-                  // Move optimistic user message to base messages and add AI response
-                  setBaseMessages(prev => [...prev, ...optimisticMessages, aiMessage]);
+                  // Add both user and AI messages to base messages
+                  setBaseMessages(prev => [...prev, userMessage, aiMessage]);
                   setOptimisticMessages([]);
                   return;
                 } else if (data.type === "error") {
@@ -193,7 +199,17 @@ export default function ChatArea(
       }
     } catch (error) {
       console.error("Streaming error:", error);
-      setOptimisticMessages((prev) => prev.slice(0, -1)); // Remove optimistic user message
+      
+      // Only remove the optimistic message if this was a real streaming failure,
+      // not just a parse error or network timeout
+      if (error instanceof Error && 
+          (error.message.includes("Failed to start streaming") || 
+           error.message.includes("No response body"))) {
+        setOptimisticMessages((prev) => prev.slice(0, -1)); // Remove optimistic user message
+      } else {
+        // For other errors (like parse errors), keep the user message and show it as failed
+        console.warn("Non-critical streaming error, keeping user message:", error);
+      }
     } finally {
       setIsStreaming(false);
       setStreamingMessage("");
