@@ -1,9 +1,29 @@
 import { aiManager } from "../../lib/ai/ai-manager.ts";
 import { AIMessage, AIProvider } from "../../lib/ai/types.ts";
 import { updateThreadByUuid } from "../../db/database.ts";
+import { getExtendedSessionFromRequest, ExtendedSessionData } from "../../utils/session.ts";
 
 export const handler = {
   async POST(req: Request, _ctx: any) {
+    // Validate session for all requests
+    const extendedSession = await getExtendedSessionFromRequest(req);
+    if (!extendedSession) {
+      return new Response("Unauthorized", { status: 401 });
+    }
+
+    // Check rate limiting for guest users
+    if (extendedSession.isGuest && extendedSession.isRateLimited) {
+      return new Response(JSON.stringify({
+        error: "Rate limit exceeded",
+        success: false,
+        messageLimit: extendedSession.messageLimit,
+        messagesRemaining: extendedSession.messagesRemaining,
+      }), {
+        status: 429,
+        headers: { "Content-Type": "application/json" },
+      });
+    }
+
     const url = new URL(req.url);
     const isStreaming = url.searchParams.get("stream") === "true";
     const isUpdateTitle = url.searchParams.get("updateTitle") === "true";
